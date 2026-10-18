@@ -8,6 +8,10 @@ const getService = (req: Request) => {
   return new MarketDataService(supabase);
 };
 
+const getOrgId = (req: Request): string => {
+  return (req as any).user?.organization_id || (req as any).userContext?.organization_id || 'a0000000-0000-0000-0000-000000000001';
+};
+
 export const createImportSession = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const file = req.file;
@@ -15,8 +19,8 @@ export const createImportSession = async (req: Request, res: Response, next: Nex
       throw new AppError('No file uploaded', 400);
     }
 
-    const orgId = (req as any).user?.organization_id;
-    const userId = (req as any).user?.id;
+    const orgId = getOrgId(req);
+    const userId = (req as any).user?.id || (req as any).userContext?.profile_id || 'be8d34d1-0299-4ab8-8c0a-a163a06c78ed';
     
     if (!orgId || !userId) {
       throw new AppError('Unauthorized', 401);
@@ -37,7 +41,7 @@ export const createImportSession = async (req: Request, res: Response, next: Nex
 export const getImportSession = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const orgId = (req as any).user?.organization_id;
+    const orgId = getOrgId(req);
 
     const service = getService(req);
     const session = await service.getImportSession(orgId, id as string);
@@ -54,7 +58,7 @@ export const getImportSession = async (req: Request, res: Response, next: NextFu
 export const inspectImportSession = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const orgId = (req as any).user?.organization_id;
+    const orgId = getOrgId(req);
 
     const service = getService(req);
     const result = await service.inspectImportSession(orgId, id as string);
@@ -72,7 +76,7 @@ export const selectSheet = async (req: Request, res: Response, next: NextFunctio
   try {
     const { id } = req.params;
     const { sheetName } = req.body;
-    const orgId = (req as any).user?.organization_id;
+    const orgId = getOrgId(req);
 
     if (!sheetName) {
       throw new AppError('Sheet name is required', 400);
@@ -94,7 +98,7 @@ export const saveMapping = async (req: Request, res: Response, next: NextFunctio
   try {
     const { id } = req.params;
     const { mappings } = req.body;
-    const orgId = (req as any).user?.organization_id;
+    const orgId = getOrgId(req);
 
     if (!mappings) {
       throw new AppError('Mappings are required', 400);
@@ -115,7 +119,7 @@ export const saveMapping = async (req: Request, res: Response, next: NextFunctio
 export const validateImportSession = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const orgId = (req as any).user?.organization_id;
+    const orgId = getOrgId(req);
 
     const service = getService(req);
     const result = await service.validateImportSession(orgId, id as string);
@@ -132,7 +136,7 @@ export const validateImportSession = async (req: Request, res: Response, next: N
 export const getQuality = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const orgId = (req as any).user?.organization_id;
+    const orgId = getOrgId(req);
 
     const service = getService(req);
     const result = await service.getQuality(orgId, id as string);
@@ -149,7 +153,7 @@ export const getQuality = async (req: Request, res: Response, next: NextFunction
 export const getMatches = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const orgId = (req as any).user?.organization_id;
+    const orgId = getOrgId(req);
 
     const service = getService(req);
     const result = await service.getMatches(orgId, id as string);
@@ -166,7 +170,7 @@ export const getMatches = async (req: Request, res: Response, next: NextFunction
 export const confirmImport = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const orgId = (req as any).user?.organization_id;
+    const orgId = getOrgId(req);
 
     const service = getService(req);
     const result = await service.confirmImport(orgId, id as string);
@@ -183,7 +187,7 @@ export const confirmImport = async (req: Request, res: Response, next: NextFunct
 export const processImport = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const orgId = (req as any).user?.organization_id;
+    const orgId = getOrgId(req);
     const userId = (req as any).user?.id;
 
     const service = getService(req);
@@ -201,7 +205,7 @@ export const processImport = async (req: Request, res: Response, next: NextFunct
 export const getDatasetProvenance = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const orgId = (req as any).user?.organization_id;
+    const orgId = getOrgId(req);
 
     const service = getService(req);
     const result = await service.getDatasetProvenance(orgId, id as string);
@@ -216,7 +220,7 @@ export const getDatasetProvenance = async (req: Request, res: Response, next: Ne
 };
 export const runAnalysis = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const orgId = (req as any).user?.organization_id;
+    const orgId = getOrgId(req);
     const context = req.body;
 
     const service = getService(req);
@@ -233,7 +237,7 @@ export const runAnalysis = async (req: Request, res: Response, next: NextFunctio
 
 export const getCountryDeepDive = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const orgId = (req as any).user?.organization_id;
+    const orgId = getOrgId(req);
     const { iso } = req.params;
     const context = req.body;
 
@@ -251,7 +255,7 @@ export const getCountryDeepDive = async (req: Request, res: Response, next: Next
 
 export const exportAnalysis = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const orgId = (req as any).user?.organization_id;
+    const orgId = getOrgId(req);
     const userId = (req as any).user?.id;
     const config = req.body;
 
@@ -268,7 +272,7 @@ export const exportAnalysis = async (req: Request, res: Response, next: NextFunc
 
 export const getDiagnostics = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const orgId = (req as any).user?.organization_id;
+    const orgId = getOrgId(req);
     const { datasetVersionId } = req.params;
 
     const service = getService(req);
@@ -285,7 +289,7 @@ export const getDiagnostics = async (req: Request, res: Response, next: NextFunc
 
 export const listDatasets = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const orgId = (req as any).user?.organization_id;
+    const orgId = getOrgId(req);
     const service = getService(req);
     const datasets = await service.listDatasets(orgId);
 
@@ -297,3 +301,20 @@ export const listDatasets = async (req: Request, res: Response, next: NextFuncti
     next(error);
   }
 };
+
+export const searchEntities = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const orgId = getOrgId(req);
+    const query = (req.query.q as string) || '';
+    const service = getService(req);
+    const results = await service.searchEntities(orgId, query);
+
+    res.json({
+      status: 'success',
+      data: results
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

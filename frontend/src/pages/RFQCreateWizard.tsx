@@ -702,6 +702,17 @@ export default function RFQCreateWizard() {
                     </span>
                   </div>
                 )}
+                {/* Description / Scope Notes */}
+                <div className="col-span-2 pt-2 border-t border-border">
+                  <span className="text-[11px] text-muted-foreground block font-medium">Description / Notes</span>
+                  <div className="mt-1 p-2.5 rounded bg-background border border-border text-foreground text-xs leading-relaxed max-h-24 overflow-y-auto whitespace-pre-wrap">
+                    {form.description ? (
+                      form.description
+                    ) : (
+                      <span className="text-muted-foreground italic">No description provided</span>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -713,13 +724,20 @@ export default function RFQCreateWizard() {
                     Products ({form.line_items.length})
                   </span>
                 </div>
-                <div className="space-y-1.5 pt-1 max-h-[140px] overflow-y-auto pr-1">
+                <div className="space-y-1.5 pt-1 max-h-[190px] overflow-y-auto pr-1">
                   {form.line_items.map((i, idx) => (
-                    <div key={idx} className="flex justify-between items-center py-1 px-2 rounded bg-background border border-border text-[11px]">
-                      <span className="font-medium text-foreground truncate max-w-[150px]">
-                        {i.product_name_as_received || 'Unnamed Product'}
-                      </span>
-                      <span className="font-mono text-muted-foreground">
+                    <div key={idx} className="flex justify-between items-center py-1.5 px-2 rounded bg-background border border-border text-[11px]">
+                      <div className="flex items-center gap-1.5 truncate max-w-[170px]">
+                        <span className="font-medium text-foreground truncate">
+                          {i.product_name_as_received || 'Unnamed Product'}
+                        </span>
+                        {i.dosage_form && (
+                          <span className="text-[9px] px-1 py-0.2 rounded bg-muted font-mono text-muted-foreground">
+                            {i.dosage_form}
+                          </span>
+                        )}
+                      </div>
+                      <span className="font-mono text-muted-foreground shrink-0">
                         {i.annual_volume ? `${Number(i.annual_volume).toLocaleString()} ${i.unit}` : 'Vol TBD'} · {i.target_country}
                       </span>
                     </div>

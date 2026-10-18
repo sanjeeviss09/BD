@@ -16,12 +16,17 @@ declare global {
 
 export const requireAuth = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    let token = '';
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'UNAUTHORIZED', message: 'Missing or invalid token' });
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1];
+    } else if (req.query && typeof req.query.token === 'string') {
+      token = req.query.token;
     }
 
-    const token = authHeader.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ error: 'UNAUTHORIZED', message: 'Missing or invalid token' });
+    }
 
     if (token === 'dev-admin-token') {
       req.user = {

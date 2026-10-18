@@ -1,10 +1,14 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.middleware';
-import { requirePermission } from '../middleware/permission.middleware';
+import { loadUserContext, requirePermission } from '../middleware/permission.middleware';
 import multer from 'multer';
 import * as marketDataController from '../controllers/market-data.controller';
 
 const router = Router();
+
+// Enforce authentication & load user context for all market-data endpoints
+router.use(requireAuth);
+router.use(loadUserContext);
 
 // Configure multer for memory storage and file size limits
 const upload = multer({
@@ -130,6 +134,13 @@ router.post(
   requireAuth,
   requirePermission('market_data.read'),
   marketDataController.getCountryDeepDive
+);
+
+router.get(
+  '/search',
+  requireAuth,
+  requirePermission('market_data.read'),
+  marketDataController.searchEntities
 );
 
 router.post(

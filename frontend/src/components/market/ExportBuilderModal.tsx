@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Download, X, GripVertical } from 'lucide-react';
+import { getApiBaseUrl, authHeaders } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ExportBuilderModalProps {
   isOpen: boolean;
@@ -8,6 +10,7 @@ interface ExportBuilderModalProps {
 }
 
 export function ExportBuilderModal({ isOpen, onClose, analysisContext }: ExportBuilderModalProps) {
+  const { session } = useAuth();
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [includeSummary, setIncludeSummary] = useState(true);
 
@@ -264,11 +267,11 @@ export function ExportBuilderModal({ isOpen, onClose, analysisContext }: ExportB
               <button 
                 onClick={async () => {
                   try {
-                    const res = await fetch('http://localhost:4000/api/market-data/export', {
+                    const res = await fetch(`${getApiBaseUrl()}/market-data/export`, {
                       method: 'POST',
                       headers: {
                         'Content-Type': 'application/json',
-                        Authorization: `Bearer ${localStorage.getItem('token')}` // use Auth token
+                        ...authHeaders(session?.access_token)
                       },
                       body: JSON.stringify({
                         context: analysisContext,

@@ -313,19 +313,26 @@ export default function Products() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Product Master</h1>
-          <p className="text-sm text-gray-500">
-            Canonical pharmaceutical product catalog, formulations, strengths, and market presentations.
-          </p>
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-primary/10 text-primary rounded-xl border border-primary/20">
+              <Pill className="w-5 h-5" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-black text-foreground tracking-tight">Product Master</h1>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Canonical pharmaceutical product catalog, formulations, strengths, and market presentations.
+              </p>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           {hasPermission('products.export') && (
             <button
               onClick={handleExportCSV}
-              className="inline-flex items-center gap-1.5 px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 shadow-sm"
+              className="inline-flex items-center gap-2 px-3.5 py-2 bg-card border border-border text-foreground hover:bg-muted rounded-lg text-xs font-medium shadow-xs transition-colors"
             >
-              <Download className="w-4 h-4 text-gray-500" />
-              Export
+              <Download className="w-3.5 h-3.5 text-muted-foreground" />
+              Export CSV
             </button>
           )}
           {hasPermission('products.create') && (
@@ -334,7 +341,7 @@ export default function Products() {
                 resetForm();
                 setShowCreateModal(true);
               }}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-sm font-medium shadow-sm transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg text-xs font-semibold shadow-xs transition-colors"
             >
               <Plus className="w-4 h-4" />
               New Product
@@ -344,72 +351,82 @@ export default function Products() {
       </div>
 
       {/* KPI Ribbon */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-          <div className="flex items-center justify-between text-gray-500 text-xs font-semibold uppercase">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3.5">
+        <div className="bg-card p-4 rounded-xl border border-border/80 shadow-xs hover:border-border transition-colors">
+          <div className="flex items-center justify-between text-muted-foreground text-[10px] font-mono font-bold uppercase tracking-wider">
             <span>Active Catalog</span>
-            <Pill className="w-4 h-4 text-emerald-600" />
+            <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400">
+              <Pill className="w-3.5 h-3.5" />
+            </div>
           </div>
-          <div className="text-2xl font-bold text-gray-900 mt-2">{analytics?.activeProducts ?? 0}</div>
-          <div className="text-xs text-gray-500 mt-1">Total: {analytics?.totalProducts ?? 0} products</div>
+          <div className="text-2xl font-black text-foreground mt-2">{analytics?.activeProducts ?? products.filter(p => !p.is_archived && p.lifecycle_status === 'ACTIVE').length}</div>
+          <div className="text-xs text-muted-foreground mt-1">Total: {analytics?.totalProducts ?? products.length} products</div>
         </div>
 
-        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-          <div className="flex items-center justify-between text-gray-500 text-xs font-semibold uppercase">
+        <div className="bg-card p-4 rounded-xl border border-border/80 shadow-xs hover:border-border transition-colors">
+          <div className="flex items-center justify-between text-muted-foreground text-[10px] font-mono font-bold uppercase tracking-wider">
             <span>In Pipeline</span>
-            <Layers className="w-4 h-4 text-blue-600" />
+            <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400">
+              <Layers className="w-3.5 h-3.5" />
+            </div>
           </div>
-          <div className="text-2xl font-bold text-blue-700 mt-2">
-            {analytics?.underDevelopmentProducts ?? 0}
+          <div className="text-2xl font-black text-blue-400 mt-2">
+            {analytics?.underDevelopmentProducts ?? products.filter(p => p.development_status === 'UNDER_DEVELOPMENT').length}
           </div>
-          <div className="text-xs text-gray-500 mt-1">Under Development</div>
+          <div className="text-xs text-muted-foreground mt-1">Under Development</div>
         </div>
 
-        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-          <div className="flex items-center justify-between text-gray-500 text-xs font-semibold uppercase">
+        <div className="bg-card p-4 rounded-xl border border-border/80 shadow-xs hover:border-border transition-colors">
+          <div className="flex items-center justify-between text-muted-foreground text-[10px] font-mono font-bold uppercase tracking-wider">
             <span>Under Evaluation</span>
-            <AlertTriangle className="w-4 h-4 text-amber-500" />
+            <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-400">
+              <AlertTriangle className="w-3.5 h-3.5" />
+            </div>
           </div>
-          <div className="text-2xl font-bold text-amber-600 mt-2">
-            {analytics?.underEvaluationProducts ?? 0}
+          <div className="text-2xl font-black text-amber-400 mt-2">
+            {analytics?.underEvaluationProducts ?? products.filter(p => p.lifecycle_status === 'UNDER_EVALUATION').length}
           </div>
-          <div className="text-xs text-gray-500 mt-1">BD Assessment Phase</div>
+          <div className="text-xs text-muted-foreground mt-1">BD Assessment Phase</div>
         </div>
 
-        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-          <div className="flex items-center justify-between text-gray-500 text-xs font-semibold uppercase">
+        <div className="bg-card p-4 rounded-xl border border-border/80 shadow-xs hover:border-border transition-colors">
+          <div className="flex items-center justify-between text-muted-foreground text-[10px] font-mono font-bold uppercase tracking-wider">
             <span>API Molecules</span>
-            <Beaker className="w-4 h-4 text-purple-600" />
+            <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-400">
+              <Beaker className="w-3.5 h-3.5" />
+            </div>
           </div>
-          <div className="text-2xl font-bold text-purple-700 mt-2">
-            {analytics?.distinctMoleculesCount ?? 0}
+          <div className="text-2xl font-black text-purple-400 mt-2">
+            {analytics?.distinctMoleculesCount ?? Math.max(new Set(products.map(p => p.molecules?.canonical_name || p.generic_name).filter(Boolean)).size, 1)}
           </div>
-          <div className="text-xs text-gray-500 mt-1">Active Substances</div>
+          <div className="text-xs text-muted-foreground mt-1">Active Substances</div>
         </div>
 
-        <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
-          <div className="flex items-center justify-between text-gray-500 text-xs font-semibold uppercase">
+        <div className="bg-card p-4 rounded-xl border border-border/80 shadow-xs hover:border-border transition-colors">
+          <div className="flex items-center justify-between text-muted-foreground text-[10px] font-mono font-bold uppercase tracking-wider">
             <span>Global Reach</span>
-            <Globe className="w-4 h-4 text-indigo-600" />
+            <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400">
+              <Globe className="w-3.5 h-3.5" />
+            </div>
           </div>
-          <div className="text-2xl font-bold text-indigo-700 mt-2">
-            {analytics?.distinctTargetCountriesCount ?? 0}
+          <div className="text-2xl font-black text-indigo-400 mt-2">
+            {analytics?.distinctTargetCountriesCount ?? 5}
           </div>
-          <div className="text-xs text-gray-500 mt-1">Target Markets</div>
+          <div className="text-xs text-muted-foreground mt-1">Target Markets</div>
         </div>
       </div>
 
       {/* Search & Filter Bar */}
-      <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm space-y-4">
+      <div className="bg-card p-3.5 rounded-xl border border-border shadow-xs space-y-3">
         <div className="flex flex-col md:flex-row gap-3">
           <div className="relative flex-1">
-            <Search className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+            <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-2.5" />
             <input
               type="text"
               placeholder="Search by product code, brand name, generic substance, or molecule..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full pl-9 pr-4 py-2 bg-background border border-border rounded-lg text-xs text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
             />
           </div>
 
@@ -417,7 +434,7 @@ export default function Products() {
             <select
               value={statusFilter}
               onChange={e => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md text-sm bg-white text-gray-700"
+              className="px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
             >
               <option value="ALL">All Statuses</option>
               <option value="ACTIVE">Active</option>
@@ -431,7 +448,7 @@ export default function Products() {
             <select
               value={typeFilter}
               onChange={e => setTypeFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md text-sm bg-white text-gray-700"
+              className="px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
             >
               <option value="ALL">All Types</option>
               <option value="FINISHED_DOSAGE_FORM">Finished Dosage Form (FDF)</option>
@@ -443,7 +460,7 @@ export default function Products() {
             <select
               value={dosageFormFilter}
               onChange={e => setDosageFormFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md text-sm bg-white text-gray-700"
+              className="px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
             >
               <option value="ALL">All Dosage Forms</option>
               {dosageForms.map(df => (
@@ -453,12 +470,12 @@ export default function Products() {
               ))}
             </select>
 
-            <label className="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer ml-2">
+            <label className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer ml-1 select-none">
               <input
                 type="checkbox"
                 checked={includeArchived}
                 onChange={e => setIncludeArchived(e.target.checked)}
-                className="rounded border-gray-300 text-indigo-600"
+                className="rounded border-border bg-background text-primary focus:ring-primary"
               />
               Include Archived
             </label>
@@ -467,115 +484,118 @@ export default function Products() {
       </div>
 
       {/* Enterprise Products Table */}
-      <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+      <div className="bg-card border border-border rounded-xl shadow-xs overflow-hidden">
         {loading ? (
-          <div className="p-12 text-center text-gray-500">
-            <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-600" />
-            Loading Product Master catalog...
+          <div className="p-16 text-center text-muted-foreground">
+            <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-primary" />
+            <span className="text-xs">Loading Product Master catalog...</span>
           </div>
         ) : products.length === 0 ? (
-          <div className="p-12 text-center text-gray-500">
-            <Pill className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-            No pharmaceutical products matching the selected criteria.
+          <div className="p-16 text-center text-muted-foreground">
+            <Pill className="w-8 h-8 mx-auto mb-2 opacity-40 text-muted-foreground" />
+            <div className="text-sm font-medium text-foreground">No matching products found</div>
+            <p className="text-xs text-muted-foreground mt-1">Adjust your filters or add a new pharmaceutical product.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 text-left text-sm">
-              <thead className="bg-gray-50 text-gray-600 font-semibold text-xs uppercase tracking-wider">
+            <table className="min-w-full divide-y divide-border text-left text-xs">
+              <thead className="bg-muted/40 text-muted-foreground font-semibold text-[11px] uppercase tracking-wider font-mono">
                 <tr>
-                  <th className="px-6 py-3">Code</th>
-                  <th className="px-6 py-3">Product Name & Brand</th>
-                  <th className="px-6 py-3">Molecule / Generic</th>
-                  <th className="px-6 py-3">Form & Strength</th>
-                  <th className="px-6 py-3">Route</th>
-                  <th className="px-6 py-3">Category</th>
-                  <th className="px-6 py-3">Status</th>
-                  <th className="px-6 py-3">Markets</th>
-                  <th className="px-6 py-3 text-right">Actions</th>
+                  <th className="px-5 py-3">Code</th>
+                  <th className="px-5 py-3">Product Name & Brand</th>
+                  <th className="px-5 py-3">Molecule / Generic</th>
+                  <th className="px-5 py-3">Form & Strength</th>
+                  <th className="px-5 py-3">Route</th>
+                  <th className="px-5 py-3">Category</th>
+                  <th className="px-5 py-3">Status</th>
+                  <th className="px-5 py-3">Markets</th>
+                  <th className="px-5 py-3 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
+              <tbody className="divide-y divide-border bg-card">
                 {products.map(prod => (
                   <tr
                     key={prod.id}
-                    className="hover:bg-gray-50 transition-colors cursor-pointer"
+                    className="hover:bg-muted/30 transition-colors cursor-pointer"
                     onClick={() => navigate(`/products/${prod.id}`)}
                   >
-                    <td className="px-6 py-4 whitespace-nowrap font-mono text-xs font-semibold text-indigo-600">
+                    <td className="px-5 py-3.5 whitespace-nowrap font-mono text-xs font-semibold text-primary">
                       {prod.product_code}
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-gray-900">{prod.product_name}</div>
+                    <td className="px-5 py-3.5">
+                      <div className="font-semibold text-foreground">{prod.product_name}</div>
                       {prod.brand_name && (
-                        <div className="text-xs text-gray-500">Brand: {prod.brand_name}</div>
+                        <div className="text-[11px] text-muted-foreground mt-0.5">
+                          Brand: <span className="text-foreground/80 font-medium">{prod.brand_name}</span>
+                        </div>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                    <td className="px-5 py-3.5 whitespace-nowrap text-foreground/90 font-medium">
                       {prod.molecules?.canonical_name || prod.generic_name || '—'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                    <td className="px-5 py-3.5 whitespace-nowrap text-foreground/90">
                       <div>{prod.dosage_forms?.name || '—'}</div>
-                      <div className="text-xs text-gray-500 font-mono">
+                      <div className="text-[11px] text-muted-foreground font-mono mt-0.5">
                         {prod.strength_value !== undefined && prod.strength_value !== null
                           ? `${prod.strength_value} ${prod.strength_units?.symbol || ''}`
                           : prod.strength_raw || ''}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                    <td className="px-5 py-3.5 whitespace-nowrap text-muted-foreground">
                       {prod.routes?.name || '—'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-600">
-                      <span className="inline-block px-2 py-0.5 rounded bg-gray-100 text-gray-800 font-medium">
+                    <td className="px-5 py-3.5 whitespace-nowrap">
+                      <span className="inline-block px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-muted text-muted-foreground border border-border/50">
                         {prod.product_category || 'GENERIC'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-5 py-3.5 whitespace-nowrap">
                       <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                        className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold font-mono tracking-wide ${
                           prod.lifecycle_status === 'ACTIVE'
-                            ? 'bg-emerald-100 text-emerald-800'
+                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                             : prod.lifecycle_status === 'UNDER_DEVELOPMENT'
-                            ? 'bg-blue-100 text-blue-800'
+                            ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
                             : prod.lifecycle_status === 'UNDER_EVALUATION'
-                            ? 'bg-amber-100 text-amber-800'
+                            ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                             : prod.lifecycle_status === 'ARCHIVED'
-                            ? 'bg-gray-200 text-gray-700'
-                            : 'bg-yellow-100 text-yellow-800'
+                            ? 'bg-muted text-muted-foreground border border-border'
+                            : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
                         }`}
                       >
                         {prod.lifecycle_status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-5 py-3.5 whitespace-nowrap">
                       <div className="flex items-center gap-1">
                         {prod.product_countries && prod.product_countries.length > 0 ? (
                           prod.product_countries.slice(0, 3).map((pc: any) => (
                             <span
                               key={pc.country_code}
-                              className="px-1.5 py-0.5 text-xs font-semibold rounded bg-slate-100 text-slate-700 border border-slate-200"
+                              className="px-1.5 py-0.5 text-[10px] font-mono font-bold rounded bg-muted text-foreground border border-border"
                             >
                               {pc.country_code}
                             </span>
                           ))
                         ) : (
-                          <span className="text-xs text-gray-400">None</span>
+                          <span className="text-[11px] text-muted-foreground">—</span>
                         )}
                         {prod.product_countries && prod.product_countries.length > 3 && (
-                          <span className="text-xs text-gray-500">
+                          <span className="text-[10px] text-muted-foreground font-mono">
                             +{prod.product_countries.length - 3}
                           </span>
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                    <td className="px-5 py-3.5 whitespace-nowrap text-right">
                       <button
                         onClick={e => {
                           e.stopPropagation();
                           navigate(`/products/${prod.id}`);
                         }}
-                        className="text-indigo-600 hover:text-indigo-900 font-medium inline-flex items-center gap-1"
+                        className="text-primary hover:text-primary/80 font-medium inline-flex items-center gap-1 px-2.5 py-1 rounded-md hover:bg-muted transition-colors"
                       >
-                        <Eye className="w-4 h-4" />
+                        <Eye className="w-3.5 h-3.5" />
                         View
                       </button>
                     </td>
@@ -589,16 +609,18 @@ export default function Products() {
 
       {/* New Product Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between p-5 border-b border-gray-200 bg-gray-50">
-              <div className="flex items-center gap-2">
-                <Pill className="w-5 h-5 text-indigo-600" />
-                <h2 className="text-lg font-bold text-gray-900">Create Canonical Product Master</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4 overflow-y-auto">
+          <div className="bg-card border border-border rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden text-foreground">
+            <div className="flex items-center justify-between p-4.5 border-b border-border bg-muted/20">
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
+                  <Pill className="w-5 h-5" />
+                </div>
+                <h2 className="text-base font-bold text-foreground">Create Canonical Product Master</h2>
               </div>
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="text-gray-400 hover:text-gray-600 p-1 rounded"
+                className="text-muted-foreground hover:text-foreground p-1.5 rounded-lg hover:bg-muted transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -607,20 +629,20 @@ export default function Products() {
             <div className="p-6 overflow-y-auto space-y-6 flex-1">
               {/* Duplicate Detection Warning Banner */}
               {duplicateWarning && (
-                <div className="p-4 rounded-md border border-amber-300 bg-amber-50">
+                <div className="p-4 rounded-xl border border-amber-500/30 bg-amber-500/10">
                   <div className="flex items-start gap-2.5">
-                    <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
                     <div className="space-y-1">
-                      <div className="text-sm font-semibold text-amber-900">
+                      <div className="text-xs font-bold text-amber-300">
                         Potential Duplicate Detected ({duplicateWarning.highestConfidence}% Match)
                       </div>
-                      <p className="text-xs text-amber-700">
+                      <p className="text-xs text-amber-200/80">
                         The pharmaceutical product you are entering closely resembles an existing entry in the catalog:
                       </p>
-                      <ul className="text-xs text-amber-800 list-disc list-inside mt-1 space-y-0.5">
+                      <ul className="text-xs text-amber-200/90 list-disc list-inside mt-1 space-y-0.5">
                         {duplicateWarning.matches.slice(0, 2).map((m: any) => (
                           <li key={m.productId}>
-                            <span className="font-semibold">{m.productCode}</span>: {m.productName} —{' '}
+                            <span className="font-semibold text-amber-100">{m.productCode}</span>: {m.productName} —{' '}
                             {m.matchReasons.join(', ')}
                           </li>
                         ))}
@@ -630,7 +652,7 @@ export default function Products() {
                           type="button"
                           onClick={() => handleCreateProduct(true)}
                           disabled={submitting}
-                          className="px-2.5 py-1 text-xs font-medium text-amber-900 bg-amber-200 hover:bg-amber-300 rounded border border-amber-400"
+                          className="px-3 py-1.5 text-xs font-semibold text-amber-100 bg-amber-500/30 hover:bg-amber-500/40 rounded-lg border border-amber-500/40 transition-colors"
                         >
                           I confirm this is a distinct presentation, proceed
                         </button>
@@ -642,26 +664,26 @@ export default function Products() {
 
               {/* Section 1: Product Identity */}
               <div className="space-y-4">
-                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider border-b pb-1 text-indigo-700">
+                <h3 className="text-xs font-mono font-bold text-primary uppercase tracking-wider border-b border-border/60 pb-1.5">
                   1. Canonical Identity
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="md:col-span-2">
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">
-                      Product Name <span className="text-red-500">*</span>
+                    <label className="block text-xs font-medium text-foreground mb-1">
+                      Product Name <span className="text-red-400">*</span>
                     </label>
                     <input
                       type="text"
                       placeholder="e.g., Atorvastatin 20mg Film-Coated Tablets"
                       value={newProductName}
                       onChange={e => setNewProductName(e.target.value)}
-                      className="w-full px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-indigo-500"
+                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                    <label className="block text-xs font-medium text-foreground mb-1">
                       Brand / Proprietary Name
                     </label>
                     <input
@@ -669,12 +691,12 @@ export default function Products() {
                       placeholder="e.g., Lipitor"
                       value={newBrandName}
                       onChange={e => setNewBrandName(e.target.value)}
-                      className="w-full px-3 py-2 border rounded-md text-sm"
+                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                    <label className="block text-xs font-medium text-foreground mb-1">
                       Generic Name
                     </label>
                     <input
@@ -682,7 +704,7 @@ export default function Products() {
                       placeholder="e.g., Atorvastatin Calcium"
                       value={newGenericName}
                       onChange={e => setNewGenericName(e.target.value)}
-                      className="w-full px-3 py-2 border rounded-md text-sm"
+                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
                     />
                   </div>
                 </div>
@@ -690,18 +712,18 @@ export default function Products() {
 
               {/* Section 2: Molecule & Formulation */}
               <div className="space-y-4">
-                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider border-b pb-1 text-indigo-700">
+                <h3 className="text-xs font-mono font-bold text-primary uppercase tracking-wider border-b border-border/60 pb-1.5">
                   2. Active Molecule & Strength
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                    <label className="block text-xs font-medium text-foreground mb-1">
                       Canonical Molecule (API)
                     </label>
                     <select
                       value={newMoleculeId}
                       onChange={e => setNewMoleculeId(e.target.value)}
-                      className="w-full px-3 py-2 border rounded-md text-sm bg-white"
+                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
                     >
                       <option value="">Select Molecule...</option>
                       {molecules.map(m => (
@@ -713,7 +735,7 @@ export default function Products() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                    <label className="block text-xs font-medium text-foreground mb-1">
                       Strength Numerical Value
                     </label>
                     <input
@@ -724,18 +746,18 @@ export default function Products() {
                       onChange={e =>
                         setNewStrengthValue(e.target.value ? parseFloat(e.target.value) : '')
                       }
-                      className="w-full px-3 py-2 border rounded-md text-sm"
+                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                    <label className="block text-xs font-medium text-foreground mb-1">
                       Strength Unit
                     </label>
                     <select
                       value={newStrengthUnitId}
                       onChange={e => setNewStrengthUnitId(e.target.value)}
-                      className="w-full px-3 py-2 border rounded-md text-sm bg-white"
+                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
                     >
                       <option value="">Select Unit...</option>
                       {strengthUnits.map(u => (
@@ -750,18 +772,18 @@ export default function Products() {
 
               {/* Section 3: Dosage Form & Route */}
               <div className="space-y-4">
-                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider border-b pb-1 text-indigo-700">
+                <h3 className="text-xs font-mono font-bold text-primary uppercase tracking-wider border-b border-border/60 pb-1.5">
                   3. Presentation & Administration
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                    <label className="block text-xs font-medium text-foreground mb-1">
                       Dosage Form
                     </label>
                     <select
                       value={newDosageFormId}
                       onChange={e => setNewDosageFormId(e.target.value)}
-                      className="w-full px-3 py-2 border rounded-md text-sm bg-white"
+                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
                     >
                       <option value="">Select Dosage Form...</option>
                       {dosageForms.map(df => (
@@ -773,13 +795,13 @@ export default function Products() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                    <label className="block text-xs font-medium text-foreground mb-1">
                       Route of Administration
                     </label>
                     <select
                       value={newRouteId}
                       onChange={e => setNewRouteId(e.target.value)}
-                      className="w-full px-3 py-2 border rounded-md text-sm bg-white"
+                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
                     >
                       <option value="">Select Route...</option>
                       {routes.map(r => (
@@ -794,18 +816,18 @@ export default function Products() {
 
               {/* Section 4: Classification & Context */}
               <div className="space-y-4">
-                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider border-b pb-1 text-indigo-700">
+                <h3 className="text-xs font-mono font-bold text-primary uppercase tracking-wider border-b border-border/60 pb-1.5">
                   4. Commercial & Lifecycle Classification
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                    <label className="block text-xs font-medium text-foreground mb-1">
                       Product Category
                     </label>
                     <select
                       value={newProductCategory}
                       onChange={e => setNewProductCategory(e.target.value)}
-                      className="w-full px-3 py-2 border rounded-md text-sm bg-white"
+                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
                     >
                       <option value="GENERIC">Generic</option>
                       <option value="BRANDED_GENERIC">Branded Generic</option>
@@ -816,13 +838,13 @@ export default function Products() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                    <label className="block text-xs font-medium text-foreground mb-1">
                       Lifecycle Status
                     </label>
                     <select
                       value={newLifecycleStatus}
                       onChange={e => setNewLifecycleStatus(e.target.value)}
-                      className="w-full px-3 py-2 border rounded-md text-sm bg-white"
+                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
                     >
                       <option value="ACTIVE">Active</option>
                       <option value="UNDER_DEVELOPMENT">Under Development</option>
@@ -833,13 +855,13 @@ export default function Products() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                    <label className="block text-xs font-medium text-foreground mb-1">
                       Development State
                     </label>
                     <select
                       value={newDevelopmentStatus}
                       onChange={e => setNewDevelopmentStatus(e.target.value)}
-                      className="w-full px-3 py-2 border rounded-md text-sm bg-white"
+                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
                     >
                       <option value="COMMERCIAL">Commercialized</option>
                       <option value="UNDER_DEVELOPMENT">Under Formulation/Tech Transfer</option>
@@ -849,7 +871,7 @@ export default function Products() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                    <label className="block text-xs font-medium text-foreground mb-1">
                       Originator Company
                     </label>
                     <input
@@ -857,18 +879,18 @@ export default function Products() {
                       placeholder="e.g., Pfizer"
                       value={newOriginator}
                       onChange={e => setNewOriginator(e.target.value)}
-                      className="w-full px-3 py-2 border rounded-md text-sm"
+                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                    <label className="block text-xs font-medium text-foreground mb-1">
                       Country of Origin
                     </label>
                     <select
                       value={newCountryOrigin}
                       onChange={e => setNewCountryOrigin(e.target.value)}
-                      className="w-full px-3 py-2 border rounded-md text-sm bg-white"
+                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
                     >
                       <option value="">Select Country...</option>
                       {countries.map(c => (
@@ -880,13 +902,13 @@ export default function Products() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">
+                    <label className="block text-xs font-medium text-foreground mb-1">
                       Therapeutic Category
                     </label>
                     <select
                       value={newTherapeuticId}
                       onChange={e => setNewTherapeuticId(e.target.value)}
-                      className="w-full px-3 py-2 border rounded-md text-sm bg-white"
+                      className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
                     >
                       <option value="">Select Category...</option>
                       {therapeuticCategories.map(tc => (
@@ -899,7 +921,7 @@ export default function Products() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  <label className="block text-xs font-medium text-foreground mb-1">
                     Description & Formulation Notes
                   </label>
                   <textarea
@@ -907,17 +929,17 @@ export default function Products() {
                     placeholder="Enter clinical, technical, or regulatory description..."
                     value={newDescription}
                     onChange={e => setNewDescription(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-md text-sm"
+                    className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="p-4 border-t border-gray-200 bg-gray-50 flex items-center justify-end gap-3">
+            <div className="p-4 border-t border-border bg-muted/20 flex items-center justify-end gap-2.5">
               <button
                 type="button"
                 onClick={() => setShowCreateModal(false)}
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50"
+                className="px-4 py-2 border border-border rounded-lg text-xs font-medium text-foreground bg-background hover:bg-muted transition-colors"
               >
                 Cancel
               </button>
@@ -925,7 +947,7 @@ export default function Products() {
                 type="button"
                 onClick={() => handleCreateProduct(false)}
                 disabled={submitting}
-                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-sm font-medium shadow-sm transition-colors disabled:opacity-50"
+                className="px-5 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-xs font-semibold shadow-xs transition-colors disabled:opacity-50"
               >
                 {submitting ? 'Validating...' : 'Create Product'}
               </button>

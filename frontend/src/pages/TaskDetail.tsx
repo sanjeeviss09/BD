@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermission } from '@/contexts/PermissionContext';
+import { getApiBaseUrl, authHeaders } from '@/lib/api';
 import { 
   Activity, 
   Clock, 
@@ -41,8 +42,8 @@ export default function TaskDetail() {
 
   const fetchTask = async () => {
     try {
-      const response = await fetch(`http://localhost:4000/api/tasks/${id}`, {
-        headers: { Authorization: `Bearer ${session?.access_token}` },
+      const response = await fetch(`${getApiBaseUrl()}/tasks/${id}`, {
+        headers: authHeaders(session?.access_token),
       });
       if (response.ok) {
         setTask(await response.json());
@@ -57,18 +58,18 @@ export default function TaskDetail() {
   };
 
   useEffect(() => {
-    if (id && session) fetchTask();
+    if (id) fetchTask();
   }, [id, session]);
 
   const handleRecordNoUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setActionLoading(true);
     try {
-      const response = await fetch(`http://localhost:4000/api/tasks/${id}/no-update`, {
+      const response = await fetch(`${getApiBaseUrl()}/tasks/${id}/no-update`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${session?.access_token}`,
+          ...authHeaders(session?.access_token),
         },
         body: JSON.stringify({
           next_followup_date: nextDate,
@@ -94,11 +95,11 @@ export default function TaskDetail() {
     e.preventDefault();
     setActionLoading(true);
     try {
-      const response = await fetch(`http://localhost:4000/api/tasks/${id}/update-received`, {
+      const response = await fetch(`${getApiBaseUrl()}/tasks/${id}/update-received`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${session?.access_token}`,
+          ...authHeaders(session?.access_token),
         },
         body: JSON.stringify({
           response_summary: remarks,
@@ -123,11 +124,11 @@ export default function TaskDetail() {
     e.preventDefault();
     setActionLoading(true);
     try {
-      const response = await fetch(`http://localhost:4000/api/tasks/${id}/partial-update`, {
+      const response = await fetch(`${getApiBaseUrl()}/tasks/${id}/partial-update`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${session?.access_token}`,
+          ...authHeaders(session?.access_token),
         },
         body: JSON.stringify({
           received_summary: receivedSummary,
@@ -155,11 +156,11 @@ export default function TaskDetail() {
     e.preventDefault();
     setActionLoading(true);
     try {
-      const response = await fetch(`http://localhost:4000/api/tasks/${id}/reschedule`, {
+      const response = await fetch(`${getApiBaseUrl()}/tasks/${id}/reschedule`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${session?.access_token}`,
+          ...authHeaders(session?.access_token),
         },
         body: JSON.stringify({
           new_date: rescheduleDate,
@@ -183,11 +184,11 @@ export default function TaskDetail() {
     e.preventDefault();
     if (!commentText.trim()) return;
     try {
-      const response = await fetch(`http://localhost:4000/api/tasks/${id}/comments`, {
+      const response = await fetch(`${getApiBaseUrl()}/tasks/${id}/comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${session?.access_token}`,
+          ...authHeaders(session?.access_token),
         },
         body: JSON.stringify({ comment: commentText }),
       });

@@ -5,27 +5,37 @@ import { TaskService } from '../services/task.service';
 import { TaskJobService } from '../services/task-job.service';
 import { ValidationError } from '../utils/errors';
 
+const flexibleId = z
+  .union([z.string(), z.null(), z.undefined()])
+  .optional()
+  .transform(val => {
+    if (!val || typeof val !== 'string') return null;
+    const trimmed = val.trim();
+    if (!trimmed || trimmed === 'null' || trimmed === 'undefined' || trimmed === 'none') return null;
+    return trimmed;
+  });
+
 const createTaskSchema = z.object({
   title: z.string().min(1, 'Title is required'),
-  description: z.string().optional(),
+  description: z.string().nullish().transform(val => val || ''),
   task_type: z.string().min(1, 'Task type is required'),
-  task_category: z.string().optional(),
+  task_category: z.string().optional().nullable(),
   priority: z.string().min(1, 'Priority is required'),
   original_due_date: z.string().min(1, 'Original due date is required'),
-  assigned_user_id: z.string().uuid().optional().nullable(),
-  assigned_department_id: z.string().uuid().optional().nullable(),
-  assigned_team_id: z.string().uuid().optional().nullable(),
-  product_id: z.string().uuid().optional().nullable(),
-  opportunity_id: z.string().uuid().optional().nullable(),
-  meeting_id: z.string().uuid().optional().nullable(),
+  assigned_user_id: flexibleId,
+  assigned_department_id: flexibleId,
+  assigned_team_id: flexibleId,
+  product_id: flexibleId,
+  opportunity_id: flexibleId,
+  meeting_id: flexibleId,
   risk_level: z.string().optional().nullable(),
   risk_reason: z.string().optional().nullable(),
-  converted_from_candidate_id: z.string().uuid().optional().nullable(),
-  responsibility_rule_id: z.string().uuid().optional().nullable(),
+  converted_from_candidate_id: flexibleId,
+  responsibility_rule_id: flexibleId,
   is_responsibility_overridden: z.boolean().optional(),
   override_reason: z.string().optional().nullable(),
-  suggested_department_id: z.string().uuid().optional().nullable(),
-  suggested_user_id: z.string().uuid().optional().nullable(),
+  suggested_department_id: flexibleId,
+  suggested_user_id: flexibleId,
   responsibility_explanation: z.string().optional().nullable(),
 });
 
@@ -108,9 +118,9 @@ export const updateTask = async (req: Request, res: Response, next: NextFunction
 };
 
 const assignTaskSchema = z.object({
-  assigned_user_id: z.string().uuid().nullable(),
-  assigned_department_id: z.string().uuid().optional().nullable(),
-  assigned_team_id: z.string().uuid().optional().nullable(),
+  assigned_user_id: flexibleId,
+  assigned_department_id: flexibleId,
+  assigned_team_id: flexibleId,
   reason: z.string().optional(),
 });
 
@@ -328,7 +338,7 @@ export const reopenTask = async (req: Request, res: Response, next: NextFunction
 };
 
 const addWatcherSchema = z.object({
-  user_id: z.string().uuid('Valid user UUID required'),
+  user_id: z.string().min(1, 'Valid user ID required'),
 });
 
 export const addWatcher = async (req: Request, res: Response, next: NextFunction) => {

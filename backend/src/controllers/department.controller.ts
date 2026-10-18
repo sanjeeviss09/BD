@@ -151,3 +151,42 @@ export const bulkUploadDepartments = async (req: Request, res: Response, next: N
     next(error);
   }
 };
+
+const bulkDeleteDepartmentsSchema = z.object({
+  ids: z.array(z.string()).min(1, 'At least one ID is required'),
+});
+
+export const bulkDeleteDepartments = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const supabase = createSupabaseClientForUser(req);
+    const orgId = req.userContext?.organization_id || 'a0000000-0000-0000-0000-000000000001';
+    const userId = req.user?.id || 'be8d34d1-0299-4ab8-8c0a-a163a06c78ed';
+    const service = new DepartmentService(supabase, orgId, userId);
+    const { ids } = bulkDeleteDepartmentsSchema.parse(req.body);
+
+    const deletedIds: string[] = [];
+    const errors: string[] = [];
+
+    for (const id of ids) {
+      try {
+        await service.deleteDepartment(id);
+        deletedIds.push(id);
+      } catch (err: any) {
+        errors.push(err.message);
+      }
+    }
+
+    res.json({
+      success: deletedIds.length > 0,
+      count: deletedIds.length,
+      deletedIds,
+      errors: errors.length > 0 ? errors : undefined,
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      next(new ValidationError('Invalid delete payload', (error as any).errors));
+    } else {
+      next(error);
+    }
+  }
+};

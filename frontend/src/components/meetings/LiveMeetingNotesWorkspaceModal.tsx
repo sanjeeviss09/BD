@@ -156,8 +156,9 @@ export default function LiveMeetingNotesWorkspaceModal({
           method: 'POST',
           headers: getHeaders(),
           body: JSON.stringify({
-            decision_text: quickItemText.trim(),
-            decision_status: 'AGREED',
+            title: quickItemText.trim(),
+            description: quickItemText.trim(),
+            impact: 'MEDIUM'
           }),
         });
       } else {
@@ -206,6 +207,19 @@ export default function LiveMeetingNotesWorkspaceModal({
       );
       if (!confirmClose) return;
     }
+    onClose();
+  };
+
+  const handlePopoutCompanion = () => {
+    const width = 480;
+    const height = 880;
+    const left = 20;
+    const top = 20;
+    window.open(
+      `/meetings/${meetingId}/companion`,
+      `BDIQ_Meeting_Companion_${meetingId}`,
+      `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+    );
     onClose();
   };
 
@@ -271,6 +285,17 @@ export default function LiveMeetingNotesWorkspaceModal({
                 <span>Call Link</span>
               </button>
             )}
+
+            {/* Pop-out Companion Window */}
+            <button
+              type="button"
+              onClick={handlePopoutCompanion}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 transition-colors shadow-sm"
+              title="Pop out Live Notes Companion Sidecar window beside Google Meet / Teams"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span>Pop-out Sidecar</span>
+            </button>
 
             {/* Review Notes & Add Tasks */}
             <button

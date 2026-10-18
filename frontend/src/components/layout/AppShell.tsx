@@ -10,6 +10,7 @@ import MeetingStartModal from '@/components/notifications/MeetingStartModal';
 import MeetingEndModal from '@/components/notifications/MeetingEndModal';
 import LiveMeetingNotesWorkspaceModal from '@/components/meetings/LiveMeetingNotesWorkspaceModal';
 import MeetingReviewAndTasksModal from '@/components/meetings/MeetingReviewAndTasksModal';
+import NotificationSettingsModal from '@/components/notifications/NotificationSettingsModal';
 import { useNotifications } from '@/contexts/NotificationContext';
 import {
   LayoutDashboard,
@@ -56,6 +57,8 @@ export default function AppShell() {
     openReviewAndTasks,
     activeReviewMeetingId,
     closeReviewAndTasks,
+    isSettingsOpen,
+    closeSettings,
   } = useNotifications();
 
   // Global Ctrl/Cmd + K listener
@@ -429,16 +432,16 @@ export default function AppShell() {
 
               <RequirePermission permission="configuration.read">
                 <Link
-                  to="/configuration"
+                  to="/settings"
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-medium transition-colors ${
-                    location.pathname === '/configuration'
+                    isActive('/settings') || isActive('/configuration')
                       ? 'bg-muted text-foreground font-semibold'
                       : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                   }`}
-                  title="Platform Configuration"
+                  title="Platform Settings & Configuration"
                 >
-                  <Sliders className={`w-4 h-4 shrink-0 ${location.pathname === '/configuration' ? 'text-foreground' : 'text-muted-foreground'}`} />
-                  {!sidebarCollapsed && <span>Configuration</span>}
+                  <Sliders className={`w-4 h-4 shrink-0 ${isActive('/settings') || isActive('/configuration') ? 'text-foreground' : 'text-muted-foreground'}`} />
+                  {!sidebarCollapsed && <span>Platform Settings</span>}
                 </Link>
               </RequirePermission>
 
@@ -489,6 +492,22 @@ export default function AppShell() {
             </div>
           </div>
         </nav>
+
+        {/* Pinned Bottom Settings Shortcut */}
+        <div className="px-3 py-2 border-t border-border bg-card">
+          <Link
+            to="/settings"
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+              isActive('/settings') || isActive('/configuration')
+                ? 'bg-muted text-foreground font-semibold'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+            }`}
+            title="Platform Settings & Configuration Centre"
+          >
+            <Sliders className={`w-4 h-4 shrink-0 ${isActive('/settings') || isActive('/configuration') ? 'text-foreground' : 'text-muted-foreground'}`} />
+            {!sidebarCollapsed && <span>Platform Settings</span>}
+          </Link>
+        </div>
 
         {/* User Mini Profile at bottom */}
         <div className="p-3 border-t border-border bg-card">
@@ -591,6 +610,19 @@ export default function AppShell() {
             {/* Notification Center */}
             <NotificationCenterDropdown />
 
+            {/* Quick Access Settings Button */}
+            <Link
+              to="/settings"
+              className={`p-2 rounded-lg border transition-colors ${
+                isActive('/settings') || isActive('/configuration')
+                  ? 'bg-muted text-foreground border-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted border-border'
+              }`}
+              title="Platform Settings & Options (/settings)"
+            >
+              <Sliders className="w-4 h-4" />
+            </Link>
+
             {/* Theme Toggle (Dark / Light) */}
             <button
               onClick={toggleTheme}
@@ -620,9 +652,17 @@ export default function AppShell() {
                   </div>
 
                   <div className="space-y-1">
+                    <Link
+                      to="/settings"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-foreground hover:bg-muted transition-colors text-left font-medium"
+                    >
+                      <Sliders className="w-4 h-4 text-muted-foreground" />
+                      <span>Platform Settings & Options</span>
+                    </Link>
                     <button
                       onClick={signOut}
-                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-foreground hover:bg-muted transition-colors text-left font-medium"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-foreground hover:bg-muted transition-colors text-left font-medium"
                     >
                       <LogOut className="w-4 h-4" />
                       <span>Sign Out of Platform</span>
@@ -643,6 +683,10 @@ export default function AppShell() {
         <NotificationToastContainer />
         <MeetingStartModal />
         <MeetingEndModal />
+        <NotificationSettingsModal
+          isOpen={isSettingsOpen}
+          onClose={closeSettings}
+        />
         {activeMeetingNotesId && (
           <LiveMeetingNotesWorkspaceModal
             meetingId={activeMeetingNotesId}

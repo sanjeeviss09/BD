@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, MapPin, Building, Package, ExternalLink, ShieldCheck, PieChart, Activity } from 'lucide-react';
+import { getApiBaseUrl, authHeaders } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface CountryDeepDiveModalProps {
   isOpen: boolean;
@@ -9,6 +11,7 @@ interface CountryDeepDiveModalProps {
 }
 
 export const CountryDeepDiveModal: React.FC<CountryDeepDiveModalProps> = ({ isOpen, onClose, iso2, analysisContext }) => {
+  const { session } = useAuth();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,11 +23,11 @@ export const CountryDeepDiveModal: React.FC<CountryDeepDiveModalProps> = ({ isOp
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`http://localhost:4000/api/market-data/analysis/country/${iso2}`, {
+        const res = await fetch(`${getApiBaseUrl()}/market-data/analysis/country/${iso2}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`
+            ...authHeaders(session?.access_token)
           },
           body: JSON.stringify(analysisContext)
         });

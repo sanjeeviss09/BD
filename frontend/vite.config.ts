@@ -22,4 +22,17 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    chunkSizeWarningLimit: 800,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-three': ['three'],
+          'vendor-xlsx': ['xlsx'],
+          'vendor-query': ['@tanstack/react-query'],
+          'vendor-lucide': ['lucide-react'],
+        },
+      },
+    },
+  },
 })

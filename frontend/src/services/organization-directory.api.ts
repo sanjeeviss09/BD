@@ -34,6 +34,13 @@ const getHeaders = (token?: string) => ({
   Authorization: `Bearer ${token || 'dev-admin-token'}`,
 });
 
+function extractErrorMessage(err: any, fallback: string): string {
+  if (err?.error?.message) return err.error.message;
+  if (err?.message) return err.message;
+  if (typeof err?.error === 'string') return err.error;
+  return fallback;
+}
+
 // ============================================================================
 // DEPARTMENT ENDPOINTS
 // ============================================================================
@@ -74,7 +81,7 @@ export async function createDepartment(payload: { code: string; name: string; de
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || 'Failed to create department');
+    throw new Error(extractErrorMessage(err, 'Failed to create department'));
   }
   return res.json();
 }
@@ -87,7 +94,7 @@ export async function updateDepartment(id: string, payload: Partial<Department>,
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || 'Failed to update department');
+    throw new Error(extractErrorMessage(err, 'Failed to update department'));
   }
   return res.json();
 }
@@ -99,7 +106,25 @@ export async function deleteDepartment(id: string, token?: string): Promise<{ su
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || 'Failed to delete department');
+    throw new Error(extractErrorMessage(err, 'Failed to delete department'));
+  }
+  return res.json();
+}
+
+export async function bulkDeleteDepartments(ids: string[], token?: string): Promise<{
+  success: boolean;
+  count: number;
+  deletedIds: string[];
+  errors?: string[];
+}> {
+  const res = await fetch(`${API_BASE}/departments/bulk-delete`, {
+    method: 'POST',
+    headers: getHeaders(token),
+    body: JSON.stringify({ ids }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(extractErrorMessage(err, 'Failed to bulk delete departments'));
   }
   return res.json();
 }
@@ -178,7 +203,7 @@ export async function createUser(payload: {
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || 'Failed to create employee');
+    throw new Error(extractErrorMessage(err, 'Failed to create employee'));
   }
   return res.json();
 }
@@ -191,7 +216,7 @@ export async function updateUser(id: string, payload: Partial<UserProfile>, toke
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || 'Failed to update employee');
+    throw new Error(extractErrorMessage(err, 'Failed to update employee'));
   }
   return res.json();
 }
@@ -202,6 +227,19 @@ export async function deleteUser(id: string, token?: string): Promise<void> {
     headers: getHeaders(token),
   });
   if (!res.ok) throw new Error('Failed to deactivate employee');
+}
+
+export async function bulkDeleteUsers(ids: string[], token?: string): Promise<{ success: boolean; count: number; deletedIds: string[] }> {
+  const res = await fetch(`${API_BASE}/users/bulk-delete`, {
+    method: 'POST',
+    headers: getHeaders(token),
+    body: JSON.stringify({ ids }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Failed to bulk delete employees');
+  }
+  return res.json();
 }
 
 export async function downloadUserTemplate(token?: string): Promise<Blob> {

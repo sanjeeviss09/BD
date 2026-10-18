@@ -8,6 +8,7 @@ import {
   createUser,
   updateUser,
   deleteUser,
+  bulkDeleteUsers,
   assignRoles,
   downloadUserTemplate,
   bulkUploadUsers,
@@ -27,6 +28,9 @@ router.get('/template', downloadUserTemplate);
 
 // Bulk upload (supports both multipart file and JSON body)
 router.post('/bulk-upload', upload.single('file'), bulkUploadUsers);
+
+// Bulk delete
+router.post('/bulk-delete', requirePermission('users.disable'), bulkDeleteUsers);
 
 router.get('/', requirePermission('users.read'), getUsers);
 router.get('/:id', requirePermission('users.read'), getUserById);

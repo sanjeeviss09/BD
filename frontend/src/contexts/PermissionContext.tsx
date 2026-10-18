@@ -49,10 +49,11 @@ export const PermissionProvider = ({ children }: { children: React.ReactNode }) 
           const data = await response.json();
           if (isMounted) {
             setPermissions(data.permissions && data.permissions.length > 0 ? data.permissions : [
-              'tasks.view', 'tasks.create', 'tasks.update', 'tasks.delete', 'tasks.followup', 'tasks.reschedule', 'tasks.reassign',
-              'products.view', 'products.create', 'products.manage', 'products.archive', 'products.export',
-              'opportunities.view', 'opportunities.create', 'opportunities.update', 'opportunities.stage', 'opportunities.qualify', 'opportunities.risk', 'opportunities.close', 'opportunities.reopen', 'opportunities.export',
-              'users.view', 'users.manage', 'roles.view', 'roles.manage', 'configuration.view', 'configuration.manage'
+              'tasks.view', 'tasks.read', 'tasks.create', 'tasks.update', 'tasks.delete', 'tasks.followup', 'tasks.reschedule', 'tasks.reassign',
+              'products.view', 'products.read', 'products.create', 'products.manage', 'products.archive', 'products.export',
+              'opportunities.view', 'opportunities.read', 'opportunities.create', 'opportunities.update', 'opportunities.stage', 'opportunities.qualify', 'opportunities.risk', 'opportunities.close', 'opportunities.reopen', 'opportunities.export',
+              'users.view', 'users.read', 'users.manage', 'roles.view', 'roles.read', 'roles.manage',
+              'configuration.read', 'configuration.view', 'configuration.manage', 'configuration.features', 'configuration.publish'
             ]);
             setProfile(data.profile || {
               id: 'b0000000-0000-0000-0000-000000000001',
@@ -65,10 +66,11 @@ export const PermissionProvider = ({ children }: { children: React.ReactNode }) 
         } else {
           if (isMounted) {
             setPermissions([
-              'tasks.view', 'tasks.create', 'tasks.update', 'tasks.delete', 'tasks.followup', 'tasks.reschedule', 'tasks.reassign',
-              'products.view', 'products.create', 'products.manage', 'products.archive', 'products.export',
-              'opportunities.view', 'opportunities.create', 'opportunities.update', 'opportunities.stage', 'opportunities.qualify', 'opportunities.risk', 'opportunities.close', 'opportunities.reopen', 'opportunities.export',
-              'users.view', 'users.manage', 'roles.view', 'roles.manage', 'configuration.view', 'configuration.manage'
+              'tasks.view', 'tasks.read', 'tasks.create', 'tasks.update', 'tasks.delete', 'tasks.followup', 'tasks.reschedule', 'tasks.reassign',
+              'products.view', 'products.read', 'products.create', 'products.manage', 'products.archive', 'products.export',
+              'opportunities.view', 'opportunities.read', 'opportunities.create', 'opportunities.update', 'opportunities.stage', 'opportunities.qualify', 'opportunities.risk', 'opportunities.close', 'opportunities.reopen', 'opportunities.export',
+              'users.view', 'users.read', 'users.manage', 'roles.view', 'roles.read', 'roles.manage',
+              'configuration.read', 'configuration.view', 'configuration.manage', 'configuration.features', 'configuration.publish'
             ]);
             setProfile({
               id: 'b0000000-0000-0000-0000-000000000001',
@@ -83,10 +85,11 @@ export const PermissionProvider = ({ children }: { children: React.ReactNode }) 
         console.error('Failed to fetch permissions:', error);
         if (isMounted) {
           setPermissions([
-            'tasks.view', 'tasks.create', 'tasks.update', 'tasks.delete', 'tasks.followup', 'tasks.reschedule', 'tasks.reassign',
-            'products.view', 'products.create', 'products.manage', 'products.archive', 'products.export',
-            'opportunities.view', 'opportunities.create', 'opportunities.update', 'opportunities.stage', 'opportunities.qualify', 'opportunities.risk', 'opportunities.close', 'opportunities.reopen', 'opportunities.export',
-            'users.view', 'users.manage', 'roles.view', 'roles.manage', 'configuration.view', 'configuration.manage'
+            'tasks.view', 'tasks.read', 'tasks.create', 'tasks.update', 'tasks.delete', 'tasks.followup', 'tasks.reschedule', 'tasks.reassign',
+            'products.view', 'products.read', 'products.create', 'products.manage', 'products.archive', 'products.export',
+            'opportunities.view', 'opportunities.read', 'opportunities.create', 'opportunities.update', 'opportunities.stage', 'opportunities.qualify', 'opportunities.risk', 'opportunities.close', 'opportunities.reopen', 'opportunities.export',
+            'users.view', 'users.read', 'users.manage', 'roles.view', 'roles.read', 'roles.manage',
+            'configuration.read', 'configuration.view', 'configuration.manage', 'configuration.features', 'configuration.publish'
           ]);
           setProfile({
             id: 'b0000000-0000-0000-0000-000000000001',
@@ -110,9 +113,26 @@ export const PermissionProvider = ({ children }: { children: React.ReactNode }) 
     };
   }, [session]);
 
-  const hasPermission = (permission: string) => permissions.includes(permission);
-  const hasAnyPermission = (perms: string[]) => perms.some(p => permissions.includes(p));
-  const hasAllPermissions = (perms: string[]) => perms.every(p => permissions.includes(p));
+  const hasPermission = (permission: string) => {
+    if (permissions.includes('*') || permissions.includes('admin')) return true;
+    if (permissions.includes(permission)) return true;
+
+    // Normalize read / view / manage aliases
+    if (permission.endsWith('.read')) {
+      const viewPerm = permission.replace('.read', '.view');
+      const managePerm = permission.replace('.read', '.manage');
+      if (permissions.includes(viewPerm) || permissions.includes(managePerm)) return true;
+    }
+    if (permission.endsWith('.view')) {
+      const readPerm = permission.replace('.view', '.read');
+      const managePerm = permission.replace('.view', '.manage');
+      if (permissions.includes(readPerm) || permissions.includes(managePerm)) return true;
+    }
+    return false;
+  };
+
+  const hasAnyPermission = (perms: string[]) => perms.some(p => hasPermission(p));
+  const hasAllPermissions = (perms: string[]) => perms.every(p => hasPermission(p));
 
   return (
     <PermissionContext.Provider value={{

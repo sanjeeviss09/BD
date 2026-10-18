@@ -303,7 +303,7 @@ export default function ProductDetail() {
       <div className="flex items-center justify-between">
         <button
           onClick={() => navigate('/products')}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Product Master
@@ -314,18 +314,18 @@ export default function ProductDetail() {
             <button
               onClick={handleRestore}
               disabled={actionLoading}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-emerald-300 bg-emerald-50 text-emerald-800 rounded-md text-sm font-medium hover:bg-emerald-100"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 rounded-lg text-xs font-medium hover:bg-emerald-500/20 transition-colors"
             >
-              <RefreshCw className="w-4 h-4" />
+              <RefreshCw className="w-3.5 h-3.5" />
               Restore Product
             </button>
           ) : (
             hasPermission('products.archive') && (
               <button
                 onClick={() => setShowArchiveModal(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 bg-white text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-border bg-card text-foreground rounded-lg text-xs font-medium hover:bg-muted transition-colors shadow-xs"
               >
-                <Archive className="w-4 h-4 text-gray-500" />
+                <Archive className="w-3.5 h-3.5 text-muted-foreground" />
                 Archive Product
               </button>
             )
@@ -334,144 +334,144 @@ export default function ProductDetail() {
       </div>
 
       {/* Main Product Header Card */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 pb-5">
+      <div className="bg-card rounded-xl border border-border shadow-xs p-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-5">
           <div className="space-y-1">
             <div className="flex items-center gap-3">
-              <span className="font-mono text-sm font-bold px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded border border-indigo-100">
+              <span className="font-mono text-xs font-bold px-2.5 py-1 bg-primary/10 text-primary rounded-md border border-primary/20">
                 {product.product_code}
               </span>
               <span
-                className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono tracking-wide ${
                   product.lifecycle_status === 'ACTIVE'
-                    ? 'bg-emerald-100 text-emerald-800'
+                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                     : product.lifecycle_status === 'UNDER_DEVELOPMENT'
-                    ? 'bg-blue-100 text-blue-800'
+                    ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
                     : product.lifecycle_status === 'ARCHIVED'
-                    ? 'bg-gray-200 text-gray-700'
-                    : 'bg-amber-100 text-amber-800'
+                    ? 'bg-muted text-muted-foreground border border-border'
+                    : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                 }`}
               >
                 {product.lifecycle_status}
               </span>
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-purple-500/10 text-purple-400 border border-purple-500/20">
                 {product.product_type}
               </span>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+            <h1 className="text-2xl font-black text-foreground tracking-tight">
               {product.product_name}
             </h1>
             {product.brand_name && (
-              <p className="text-sm text-gray-500">
-                Proprietary Brand: <span className="font-semibold text-gray-800">{product.brand_name}</span>
+              <p className="text-xs text-muted-foreground">
+                Proprietary Brand: <span className="font-semibold text-foreground/90">{product.brand_name}</span>
               </p>
             )}
           </div>
 
-          <div className="flex items-center gap-6 text-sm text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-100">
+          <div className="flex items-center gap-6 text-xs text-foreground bg-muted/30 p-3 rounded-lg border border-border">
             <div>
-              <div className="text-xs text-gray-400 font-semibold uppercase">Category</div>
-              <div className="font-medium text-gray-900">{product.product_category || 'GENERIC'}</div>
+              <div className="text-[10px] text-muted-foreground font-semibold uppercase font-mono">Category</div>
+              <div className="font-semibold text-foreground mt-0.5">{product.product_category || 'GENERIC'}</div>
             </div>
-            <div className="border-l pl-4">
-              <div className="text-xs text-gray-400 font-semibold uppercase">Development State</div>
-              <div className="font-medium text-gray-900">{product.development_status}</div>
+            <div className="border-l border-border pl-4">
+              <div className="text-[10px] text-muted-foreground font-semibold uppercase font-mono">Development State</div>
+              <div className="font-semibold text-foreground mt-0.5">{product.development_status}</div>
             </div>
-            <div className="border-l pl-4">
-              <div className="text-xs text-gray-400 font-semibold uppercase">Version</div>
-              <div className="font-mono text-gray-900">v{product.version}</div>
+            <div className="border-l border-border pl-4">
+              <div className="text-[10px] text-muted-foreground font-semibold uppercase font-mono">Version</div>
+              <div className="font-mono text-foreground mt-0.5">v{product.version}</div>
             </div>
           </div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex items-center gap-1 mt-6 border-b border-gray-200 overflow-x-auto">
+        <div className="flex items-center gap-1 mt-6 border-b border-border overflow-x-auto">
           <button
             onClick={() => setActiveTab('overview')}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 flex items-center gap-2 whitespace-nowrap ${
+            className={`px-4 py-2.5 text-xs font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
               activeTab === 'overview'
-                ? 'border-indigo-600 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
-            <Pill className="w-4 h-4" />
+            <Pill className="w-3.5 h-3.5" />
             Identity & Formulation
           </button>
           <button
             onClick={() => setActiveTab('presentations')}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 flex items-center gap-2 whitespace-nowrap ${
+            className={`px-4 py-2.5 text-xs font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
               activeTab === 'presentations'
-                ? 'border-indigo-600 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
-            <Layers className="w-4 h-4" />
+            <Layers className="w-3.5 h-3.5" />
             Presentations ({product.product_presentations?.length || 0})
           </button>
           <button
             onClick={() => setActiveTab('companies')}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 flex items-center gap-2 whitespace-nowrap ${
+            className={`px-4 py-2.5 text-xs font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
               activeTab === 'companies'
-                ? 'border-indigo-600 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
-            <Building className="w-4 h-4" />
+            <Building className="w-3.5 h-3.5" />
             Companies ({product.product_companies?.length || 0})
           </button>
           <button
             onClick={() => setActiveTab('countries')}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 flex items-center gap-2 whitespace-nowrap ${
+            className={`px-4 py-2.5 text-xs font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
               activeTab === 'countries'
-                ? 'border-indigo-600 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
-            <Globe className="w-4 h-4" />
+            <Globe className="w-3.5 h-3.5" />
             Target Markets ({product.product_countries?.length || 0})
           </button>
           <button
             onClick={() => setActiveTab('aliases')}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 flex items-center gap-2 whitespace-nowrap ${
+            className={`px-4 py-2.5 text-xs font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
               activeTab === 'aliases'
-                ? 'border-indigo-600 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
-            <Tag className="w-4 h-4" />
+            <Tag className="w-3.5 h-3.5" />
             Aliases ({product.product_aliases?.length || 0})
           </button>
           <button
             onClick={() => setActiveTab('tasks')}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 flex items-center gap-2 whitespace-nowrap ${
+            className={`px-4 py-2.5 text-xs font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
               activeTab === 'tasks'
-                ? 'border-indigo-600 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
-            <CheckSquare className="w-4 h-4" />
+            <CheckSquare className="w-3.5 h-3.5" />
             Tasks ({linkedTasks.length})
           </button>
           <button
             onClick={() => setActiveTab('regulatory')}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 flex items-center gap-2 whitespace-nowrap ${
+            className={`px-4 py-2.5 text-xs font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
               activeTab === 'regulatory'
-                ? 'border-indigo-600 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
-            <FileText className="w-4 h-4" />
+            <FileText className="w-3.5 h-3.5" />
             Regulatory Intelligence
           </button>
           <button
             onClick={() => setActiveTab('future')}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 flex items-center gap-2 whitespace-nowrap ${
+            className={`px-4 py-2.5 text-xs font-semibold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
               activeTab === 'future'
-                ? 'border-indigo-600 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
-            <BarChart2 className="w-4 h-4" />
+            <BarChart2 className="w-3.5 h-3.5" />
             Intelligence Extension Points
           </button>
         </div>
@@ -480,83 +480,83 @@ export default function ProductDetail() {
       {/* Tab 1: Overview & Identity */}
       {activeTab === 'overview' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm space-y-4">
-            <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider text-indigo-700 border-b pb-2">
+          <div className="bg-card p-6 rounded-xl border border-border shadow-xs space-y-4">
+            <h3 className="text-xs font-mono font-bold text-primary uppercase tracking-wider border-b border-border pb-2">
               Pharmaceutical Formulation
             </h3>
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between py-1.5 border-b border-gray-100">
-                <span className="text-gray-500">Active Molecule (API):</span>
-                <span className="font-semibold text-gray-900">
+            <div className="space-y-3 text-xs">
+              <div className="flex justify-between py-1.5 border-b border-border/50">
+                <span className="text-muted-foreground">Active Molecule (API):</span>
+                <span className="font-semibold text-foreground">
                   {product.molecules?.canonical_name || '—'}
                 </span>
               </div>
-              <div className="flex justify-between py-1.5 border-b border-gray-100">
-                <span className="text-gray-500">CAS Registry Number:</span>
-                <span className="font-mono text-gray-700">
+              <div className="flex justify-between py-1.5 border-b border-border/50">
+                <span className="text-muted-foreground">CAS Registry Number:</span>
+                <span className="font-mono text-foreground">
                   {product.molecules?.cas_number || '—'}
                 </span>
               </div>
-              <div className="flex justify-between py-1.5 border-b border-gray-100">
-                <span className="text-gray-500">Dosage Form:</span>
-                <span className="font-medium text-gray-900">
+              <div className="flex justify-between py-1.5 border-b border-border/50">
+                <span className="text-muted-foreground">Dosage Form:</span>
+                <span className="font-medium text-foreground">
                   {product.dosage_forms?.name || '—'}
                 </span>
               </div>
-              <div className="flex justify-between py-1.5 border-b border-gray-100">
-                <span className="text-gray-500">Strength:</span>
-                <span className="font-semibold text-indigo-600">
+              <div className="flex justify-between py-1.5 border-b border-border/50">
+                <span className="text-muted-foreground">Strength:</span>
+                <span className="font-semibold text-primary font-mono">
                   {product.strength_value !== undefined && product.strength_value !== null
                     ? `${product.strength_value} ${product.strength_units?.symbol || ''}`
                     : product.strength_raw || '—'}
                 </span>
               </div>
-              <div className="flex justify-between py-1.5 border-b border-gray-100">
-                <span className="text-gray-500">Route of Administration:</span>
-                <span className="font-medium text-gray-900">
+              <div className="flex justify-between py-1.5 border-b border-border/50">
+                <span className="text-muted-foreground">Route of Administration:</span>
+                <span className="font-medium text-foreground">
                   {product.routes?.name || '—'}
                 </span>
               </div>
               <div className="flex justify-between py-1.5">
-                <span className="text-gray-500">Therapeutic Area:</span>
-                <span className="font-medium text-gray-900">
+                <span className="text-muted-foreground">Therapeutic Area:</span>
+                <span className="font-medium text-foreground">
                   {product.therapeutic_categories?.name || '—'}
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm space-y-4">
-            <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider text-indigo-700 border-b pb-2">
+          <div className="bg-card p-6 rounded-xl border border-border shadow-xs space-y-4">
+            <h3 className="text-xs font-mono font-bold text-primary uppercase tracking-wider border-b border-border pb-2">
               Commercial Context & Provenance
             </h3>
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between py-1.5 border-b border-gray-100">
-                <span className="text-gray-500">Originator / Reference Brand:</span>
-                <span className="font-medium text-gray-900">
+            <div className="space-y-3 text-xs">
+              <div className="flex justify-between py-1.5 border-b border-border/50">
+                <span className="text-muted-foreground">Originator / Reference Brand:</span>
+                <span className="font-medium text-foreground">
                   {product.originator_company || '—'}
                 </span>
               </div>
-              <div className="flex justify-between py-1.5 border-b border-gray-100">
-                <span className="text-gray-500">Country of Origin:</span>
-                <span className="font-medium text-gray-900">
+              <div className="flex justify-between py-1.5 border-b border-border/50">
+                <span className="text-muted-foreground">Country of Origin:</span>
+                <span className="font-medium text-foreground">
                   {product.country_of_origin || '—'}
                 </span>
               </div>
-              <div className="flex justify-between py-1.5 border-b border-gray-100">
-                <span className="text-gray-500">Created At:</span>
-                <span className="text-gray-700">
+              <div className="flex justify-between py-1.5 border-b border-border/50">
+                <span className="text-muted-foreground">Created At:</span>
+                <span className="text-foreground/90">
                   {new Date(product.created_at).toLocaleString()}
                 </span>
               </div>
-              <div className="flex justify-between py-1.5 border-b border-gray-100">
-                <span className="text-gray-500">Last Updated:</span>
-                <span className="text-gray-700">
+              <div className="flex justify-between py-1.5 border-b border-border/50">
+                <span className="text-muted-foreground">Last Updated:</span>
+                <span className="text-foreground/90">
                   {new Date(product.updated_at).toLocaleString()}
                 </span>
               </div>
               {product.is_archived && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded text-xs text-red-800">
+                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-xs text-red-400">
                   <div className="font-bold">Archived:</div>
                   <div>Reason: {product.archive_reason}</div>
                   <div>Date: {new Date(product.archived_at).toLocaleString()}</div>
@@ -566,10 +566,10 @@ export default function ProductDetail() {
 
             {product.description && (
               <div className="pt-2">
-                <div className="text-xs text-gray-500 font-semibold uppercase mb-1">
+                <div className="text-[10px] text-muted-foreground font-semibold uppercase font-mono mb-1">
                   Description / Formulation Notes
                 </div>
-                <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded border border-gray-100">
+                <p className="text-xs text-foreground bg-muted/40 p-3 rounded-lg border border-border">
                   {product.description}
                 </p>
               </div>
@@ -580,18 +580,18 @@ export default function ProductDetail() {
 
       {/* Tab 2: Presentations & Pack Sizes */}
       {activeTab === 'presentations' && (
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 space-y-4">
+        <div className="bg-card rounded-xl border border-border shadow-xs p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-base font-bold text-gray-900">Product Presentations & Packaging</h3>
-              <p className="text-xs text-gray-500">
+              <h3 className="text-sm font-bold text-foreground">Product Presentations & Packaging</h3>
+              <p className="text-xs text-muted-foreground">
                 Specific packaging configurations, pack sizes, and bottle/blister counts.
               </p>
             </div>
             {hasPermission('products.manage') && (
               <button
                 onClick={() => setShowPresentationModal(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded text-xs font-medium hover:bg-indigo-700"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-semibold hover:bg-primary/90 transition-colors shadow-xs"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Add Presentation
@@ -599,9 +599,9 @@ export default function ProductDetail() {
             )}
           </div>
 
-          <div className="border border-gray-200 rounded-md overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200 text-left text-sm">
-              <thead className="bg-gray-50 text-gray-600 text-xs uppercase font-semibold">
+          <div className="border border-border rounded-lg overflow-hidden">
+            <table className="min-w-full divide-y divide-border text-left text-xs">
+              <thead className="bg-muted/40 text-muted-foreground text-[11px] uppercase font-mono font-semibold">
                 <tr>
                   <th className="px-4 py-2.5">Presentation Name</th>
                   <th className="px-4 py-2.5">Pack Size</th>
@@ -609,20 +609,20 @@ export default function ProductDetail() {
                   <th className="px-4 py-2.5 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-border">
                 {product.product_presentations && product.product_presentations.length > 0 ? (
                   product.product_presentations.map((p: any) => (
-                    <tr key={p.id}>
-                      <td className="px-4 py-3 font-medium text-gray-900">{p.presentation_name}</td>
-                      <td className="px-4 py-3 text-gray-700">
+                    <tr key={p.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-3 font-medium text-foreground">{p.presentation_name}</td>
+                      <td className="px-4 py-3 text-foreground/90 font-mono">
                         {p.pack_size ? `${p.pack_size} ${p.pack_unit || ''}` : '—'}
                       </td>
-                      <td className="px-4 py-3 text-gray-700">{p.packaging_type || '—'}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{p.packaging_type || '—'}</td>
                       <td className="px-4 py-3 text-right">
                         {hasPermission('products.manage') && (
                           <button
                             onClick={() => handleDeletePresentation(p.id)}
-                            className="text-red-500 hover:text-red-700 p-1"
+                            className="text-red-400 hover:text-red-300 p-1"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -632,7 +632,7 @@ export default function ProductDetail() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={4} className="p-6 text-center text-gray-400 text-xs">
+                    <td colSpan={4} className="p-6 text-center text-muted-foreground text-xs">
                       No specific presentations configured yet.
                     </td>
                   </tr>
@@ -645,18 +645,18 @@ export default function ProductDetail() {
 
       {/* Tab 3: Companies & Manufacturer Relationships */}
       {activeTab === 'companies' && (
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 space-y-4">
+        <div className="bg-card rounded-xl border border-border shadow-xs p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-base font-bold text-gray-900">Commercial & Manufacturing Partners</h3>
-              <p className="text-xs text-gray-500">
+              <h3 className="text-sm font-bold text-foreground">Commercial & Manufacturing Partners</h3>
+              <p className="text-xs text-muted-foreground">
                 Originator, CMO/Contract Manufacturer, Marketer, and License Holder relationships.
               </p>
             </div>
             {hasPermission('products.manage') && (
               <button
                 onClick={() => setShowCompanyModal(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded text-xs font-medium hover:bg-indigo-700"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-semibold hover:bg-primary/90 transition-colors shadow-xs"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Add Partner
@@ -664,9 +664,9 @@ export default function ProductDetail() {
             )}
           </div>
 
-          <div className="border border-gray-200 rounded-md overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200 text-left text-sm">
-              <thead className="bg-gray-50 text-gray-600 text-xs uppercase font-semibold">
+          <div className="border border-border rounded-lg overflow-hidden">
+            <table className="min-w-full divide-y divide-border text-left text-xs">
+              <thead className="bg-muted/40 text-muted-foreground text-[11px] uppercase font-mono font-semibold">
                 <tr>
                   <th className="px-4 py-2.5">Company Name</th>
                   <th className="px-4 py-2.5">Relationship Type</th>
@@ -674,22 +674,22 @@ export default function ProductDetail() {
                   <th className="px-4 py-2.5 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-border">
                 {product.product_companies && product.product_companies.length > 0 ? (
                   product.product_companies.map((c: any) => (
-                    <tr key={c.id}>
-                      <td className="px-4 py-3 font-medium text-gray-900">{c.company_name}</td>
+                    <tr key={c.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-3 font-medium text-foreground">{c.company_name}</td>
                       <td className="px-4 py-3 text-xs">
-                        <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-semibold border border-blue-200">
+                        <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 font-semibold border border-blue-500/20 font-mono text-[10px]">
                           {c.relationship_type}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-gray-700">{c.country_code || '—'}</td>
+                      <td className="px-4 py-3 text-muted-foreground font-mono">{c.country_code || '—'}</td>
                       <td className="px-4 py-3 text-right">
                         {hasPermission('products.manage') && (
                           <button
                             onClick={() => handleDeleteCompany(c.id)}
-                            className="text-red-500 hover:text-red-700 p-1"
+                            className="text-red-400 hover:text-red-300 p-1"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -699,7 +699,7 @@ export default function ProductDetail() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={4} className="p-6 text-center text-gray-400 text-xs">
+                    <td colSpan={4} className="p-6 text-center text-muted-foreground text-xs">
                       No corporate relationships recorded.
                     </td>
                   </tr>
@@ -712,18 +712,18 @@ export default function ProductDetail() {
 
       {/* Tab 4: Target Countries & Markets */}
       {activeTab === 'countries' && (
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 space-y-4">
+        <div className="bg-card rounded-xl border border-border shadow-xs p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-base font-bold text-gray-900">Target Countries & Market Applicability</h3>
-              <p className="text-xs text-gray-500">
+              <h3 className="text-sm font-bold text-foreground">Target Countries & Market Applicability</h3>
+              <p className="text-xs text-muted-foreground">
                 Country-specific launch schedules, commercial status, and regulatory filings.
               </p>
             </div>
             {hasPermission('products.manage') && (
               <button
                 onClick={() => setShowCountryModal(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded text-xs font-medium hover:bg-indigo-700"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-semibold hover:bg-primary/90 transition-colors shadow-xs"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Add Target Market
@@ -731,9 +731,9 @@ export default function ProductDetail() {
             )}
           </div>
 
-          <div className="border border-gray-200 rounded-md overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200 text-left text-sm">
-              <thead className="bg-gray-50 text-gray-600 text-xs uppercase font-semibold">
+          <div className="border border-border rounded-lg overflow-hidden">
+            <table className="min-w-full divide-y divide-border text-left text-xs">
+              <thead className="bg-muted/40 text-muted-foreground text-[11px] uppercase font-mono font-semibold">
                 <tr>
                   <th className="px-4 py-2.5">Country Code</th>
                   <th className="px-4 py-2.5">Market Status</th>
@@ -741,26 +741,26 @@ export default function ProductDetail() {
                   <th className="px-4 py-2.5 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-border">
                 {product.product_countries && product.product_countries.length > 0 ? (
                   product.product_countries.map((ct: any) => (
-                    <tr key={ct.id}>
-                      <td className="px-4 py-3 font-mono font-semibold text-indigo-700">
+                    <tr key={ct.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-3 font-mono font-bold text-primary">
                         {ct.country_code}
                       </td>
                       <td className="px-4 py-3 text-xs">
-                        <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200">
+                        <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-semibold border border-emerald-500/20 font-mono text-[10px]">
                           {ct.market_status}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-gray-700 font-mono text-xs">
+                      <td className="px-4 py-3 text-muted-foreground font-mono text-xs">
                         {ct.expected_launch_date || '—'}
                       </td>
                       <td className="px-4 py-3 text-right">
                         {hasPermission('products.manage') && (
                           <button
                             onClick={() => handleDeleteCountry(ct.id)}
-                            className="text-red-500 hover:text-red-700 p-1"
+                            className="text-red-400 hover:text-red-300 p-1"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -770,7 +770,7 @@ export default function ProductDetail() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={4} className="p-6 text-center text-gray-400 text-xs">
+                    <td colSpan={4} className="p-6 text-center text-muted-foreground text-xs">
                       No target countries configured.
                     </td>
                   </tr>
@@ -783,18 +783,18 @@ export default function ProductDetail() {
 
       {/* Tab 5: Aliases & Synonyms */}
       {activeTab === 'aliases' && (
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 space-y-4">
+        <div className="bg-card rounded-xl border border-border shadow-xs p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-base font-bold text-gray-900">Aliases, Synonyms & Internal Codes</h3>
-              <p className="text-xs text-gray-500">
+              <h3 className="text-sm font-bold text-foreground">Aliases, Synonyms & Internal Codes</h3>
+              <p className="text-xs text-muted-foreground">
                 Alternate brand names, SKU codes, customer terms, and regional nonproprietary names.
               </p>
             </div>
             {hasPermission('products.manage') && (
               <button
                 onClick={() => setShowAliasModal(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded text-xs font-medium hover:bg-indigo-700"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-semibold hover:bg-primary/90 transition-colors shadow-xs"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Add Alias
@@ -802,26 +802,26 @@ export default function ProductDetail() {
             )}
           </div>
 
-          <div className="border border-gray-200 rounded-md overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200 text-left text-sm">
-              <thead className="bg-gray-50 text-gray-600 text-xs uppercase font-semibold">
+          <div className="border border-border rounded-lg overflow-hidden">
+            <table className="min-w-full divide-y divide-border text-left text-xs">
+              <thead className="bg-muted/40 text-muted-foreground text-[11px] uppercase font-mono font-semibold">
                 <tr>
                   <th className="px-4 py-2.5">Alias / Synonym</th>
                   <th className="px-4 py-2.5">Type</th>
                   <th className="px-4 py-2.5 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-border">
                 {product.product_aliases && product.product_aliases.length > 0 ? (
                   product.product_aliases.map((al: any) => (
-                    <tr key={al.id}>
-                      <td className="px-4 py-3 font-medium text-gray-900">{al.alias_value}</td>
-                      <td className="px-4 py-3 text-xs text-gray-600 font-medium">{al.alias_type}</td>
+                    <tr key={al.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-3 font-medium text-foreground">{al.alias_value}</td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground font-mono">{al.alias_type}</td>
                       <td className="px-4 py-3 text-right">
                         {hasPermission('products.manage') && (
                           <button
                             onClick={() => handleDeleteAlias(al.id)}
-                            className="text-red-500 hover:text-red-700 p-1"
+                            className="text-red-400 hover:text-red-300 p-1"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -831,7 +831,7 @@ export default function ProductDetail() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={3} className="p-6 text-center text-gray-400 text-xs">
+                    <td colSpan={3} className="p-6 text-center text-muted-foreground text-xs">
                       No aliases or synonyms recorded.
                     </td>
                   </tr>
@@ -842,20 +842,20 @@ export default function ProductDetail() {
         </div>
       )}
 
-      {/* Tab 6: Linked Tasks (Integrated with Step 7) */}
+      {/* Tab 6: Linked Tasks */}
       {activeTab === 'tasks' && (
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 space-y-4">
+        <div className="bg-card rounded-xl border border-border shadow-xs p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-base font-bold text-gray-900">Associated Workflow Tasks</h3>
-              <p className="text-xs text-gray-500">
+              <h3 className="text-sm font-bold text-foreground">Associated Workflow Tasks</h3>
+              <p className="text-xs text-muted-foreground">
                 Tasks linked to this canonical product (feasibility, dossier review, RFQ follow-ups).
               </p>
             </div>
             {hasPermission('tasks.create') && (
               <button
                 onClick={() => navigate('/tasks')}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded text-xs font-medium hover:bg-indigo-700"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-semibold hover:bg-primary/90 transition-colors shadow-xs"
               >
                 <Plus className="w-3.5 h-3.5" />
                 Create Task
@@ -863,9 +863,9 @@ export default function ProductDetail() {
             )}
           </div>
 
-          <div className="border border-gray-200 rounded-md overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200 text-left text-sm">
-              <thead className="bg-gray-50 text-gray-600 text-xs uppercase font-semibold">
+          <div className="border border-border rounded-lg overflow-hidden">
+            <table className="min-w-full divide-y divide-border text-left text-xs">
+              <thead className="bg-muted/40 text-muted-foreground text-[11px] uppercase font-mono font-semibold">
                 <tr>
                   <th className="px-4 py-2.5">Task Code</th>
                   <th className="px-4 py-2.5">Title</th>
@@ -874,24 +874,24 @@ export default function ProductDetail() {
                   <th className="px-4 py-2.5">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-border">
                 {linkedTasks.length > 0 ? (
                   linkedTasks.map((t: any) => (
                     <tr
                       key={t.id}
-                      className="hover:bg-gray-50 cursor-pointer"
+                      className="hover:bg-muted/30 transition-colors cursor-pointer"
                       onClick={() => navigate(`/tasks/${t.id}`)}
                     >
-                      <td className="px-4 py-3 font-mono text-xs font-semibold text-indigo-600">
+                      <td className="px-4 py-3 font-mono text-xs font-semibold text-primary">
                         {t.task_code}
                       </td>
-                      <td className="px-4 py-3 font-medium text-gray-900">{t.title}</td>
-                      <td className="px-4 py-3 text-xs text-gray-600">{t.task_type}</td>
+                      <td className="px-4 py-3 font-medium text-foreground">{t.title}</td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground font-mono">{t.task_type}</td>
                       <td className="px-4 py-3 text-xs">
-                        <span className="font-semibold text-gray-800">{t.priority}</span>
+                        <span className="font-semibold text-foreground/90">{t.priority}</span>
                       </td>
                       <td className="px-4 py-3 text-xs">
-                        <span className="px-2 py-0.5 rounded bg-gray-100 text-gray-800 font-semibold">
+                        <span className="px-2 py-0.5 rounded bg-muted text-foreground font-mono text-[10px] font-semibold border border-border">
                           {t.status}
                         </span>
                       </td>
@@ -899,7 +899,7 @@ export default function ProductDetail() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="p-6 text-center text-gray-400 text-xs">
+                    <td colSpan={5} className="p-6 text-center text-muted-foreground text-xs">
                       No tasks currently linked to this product.
                     </td>
                   </tr>
@@ -912,23 +912,23 @@ export default function ProductDetail() {
 
       {/* Tab: Regulatory Intelligence Profile */}
       {activeTab === 'regulatory' && (
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6 space-y-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 pb-4">
+        <div className="bg-card rounded-xl border border-border shadow-xs p-6 space-y-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 uppercase">
+                <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase">
                   Verified Regulatory Dossier
                 </span>
-                <h3 className="text-base font-bold text-gray-900">Global Regulatory Approvals & Authorizations</h3>
+                <h3 className="text-sm font-bold text-foreground">Global Regulatory Approvals & Authorizations</h3>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 National competent authority marketing authorizations, approval pathways, and deterministic risk evaluations.
               </p>
             </div>
 
             <button
               onClick={() => navigate('/regulatory-intelligence')}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 text-white rounded-md text-xs font-semibold hover:bg-indigo-700 shadow-sm"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-primary text-primary-foreground rounded-lg text-xs font-semibold hover:bg-primary/90 transition-colors shadow-xs"
             >
               <FileText className="w-4 h-4" />
               Open Regulatory Intelligence Workspace
@@ -937,40 +937,40 @@ export default function ProductDetail() {
 
           {/* Quick Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 rounded-lg bg-gray-50 border border-gray-200">
-              <span className="text-[11px] font-mono text-gray-500 uppercase">Regulatory Readiness</span>
-              <div className="text-2xl font-bold font-mono text-gray-900 mt-1">
+            <div className="p-4 rounded-xl bg-muted/30 border border-border">
+              <span className="text-[11px] font-mono text-muted-foreground uppercase">Regulatory Readiness</span>
+              <div className="text-2xl font-black font-mono text-foreground mt-1">
                 {regulatoryProfile?.readiness?.score || 72}%
               </div>
-              <div className="text-xs text-gray-500 mt-1">
+              <div className="text-xs text-muted-foreground mt-1">
                 {regulatoryProfile?.readiness?.approvedJurisdictionsCount || 3} of 7 Jurisdictions Approved
               </div>
             </div>
 
-            <div className="p-4 rounded-lg bg-gray-50 border border-gray-200">
-              <span className="text-[11px] font-mono text-gray-500 uppercase">Verified Records</span>
-              <div className="text-2xl font-bold font-mono text-gray-900 mt-1">
+            <div className="p-4 rounded-xl bg-muted/30 border border-border">
+              <span className="text-[11px] font-mono text-muted-foreground uppercase">Verified Records</span>
+              <div className="text-2xl font-black font-mono text-foreground mt-1">
                 {regulatoryProfile?.records?.length || 3} Filings
               </div>
-              <div className="text-xs text-emerald-600 mt-1">
+              <div className="text-xs text-emerald-400 mt-1">
                 100% Ingested & Entity Matched
               </div>
             </div>
 
-            <div className="p-4 rounded-lg bg-gray-50 border border-gray-200">
-              <span className="text-[11px] font-mono text-gray-500 uppercase">Decision-Support Risks</span>
-              <div className="text-2xl font-bold font-mono text-gray-900 mt-1">
+            <div className="p-4 rounded-xl bg-muted/30 border border-border">
+              <span className="text-[11px] font-mono text-muted-foreground uppercase">Decision-Support Risks</span>
+              <div className="text-2xl font-black font-mono text-foreground mt-1">
                 {regulatoryProfile?.risks?.length || 0} Flags
               </div>
-              <div className="text-xs text-gray-500 mt-1">
-                Rule-Based Engine (Zero AI)
+              <div className="text-xs text-muted-foreground mt-1">
+                Rule-Based Engine (Deterministic)
               </div>
             </div>
           </div>
 
           {/* Jurisdiction Status Grid */}
           <div className="space-y-3">
-            <h4 className="text-xs font-mono uppercase font-bold text-gray-700">Jurisdiction Authorization Matrix</h4>
+            <h4 className="text-xs font-mono uppercase font-bold text-foreground">Jurisdiction Authorization Matrix</h4>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {['US', 'EU', 'GB', 'JP', 'CA', 'AU', 'BR'].map((jur) => {
                 const item = regulatoryProfile?.jurisdictionMatrix?.[jur];
@@ -978,22 +978,22 @@ export default function ProductDetail() {
                 const isNotFound = !item || item.status === 'NOT_FOUND';
 
                 return (
-                  <div key={jur} className="p-3 rounded-lg border border-gray-200 bg-gray-50/50 space-y-1 text-xs">
+                  <div key={jur} className="p-3 rounded-xl border border-border bg-muted/20 space-y-1 text-xs">
                     <div className="flex justify-between items-center">
-                      <span className="font-mono font-bold text-gray-900">{jur}</span>
+                      <span className="font-mono font-bold text-foreground">{jur}</span>
                       <span
                         className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${
                           isApproved
-                            ? 'bg-emerald-100 text-emerald-800'
+                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                             : isNotFound
-                            ? 'bg-gray-100 text-gray-500'
-                            : 'bg-amber-100 text-amber-800'
+                            ? 'bg-muted text-muted-foreground border border-border'
+                            : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                         }`}
                       >
                         {isApproved ? 'APPROVED' : isNotFound ? 'NO DATA' : item?.status}
                       </span>
                     </div>
-                    <div className="text-[11px] text-gray-500 font-mono truncate">
+                    <div className="text-[11px] text-muted-foreground font-mono truncate">
                       {item?.authorizationNumber || 'No record'}
                     </div>
                   </div>
@@ -1007,32 +1007,32 @@ export default function ProductDetail() {
       {/* Tab 7: Future Intelligence Extension Points */}
       {activeTab === 'future' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white p-5 rounded-lg border border-dashed border-gray-300 shadow-sm space-y-2">
-            <div className="flex items-center gap-2 text-indigo-600 font-semibold text-sm">
+          <div className="bg-card p-5 rounded-xl border border-dashed border-border shadow-xs space-y-2">
+            <div className="flex items-center gap-2 text-primary font-semibold text-xs">
               <BarChart2 className="w-4 h-4" />
               Market Intelligence (IMS / IQVIA Observations)
             </div>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               Future connection point: 24-month volume trends, sales observations, competitor market
               share, and price per unit will link natively to canonical ID{' '}
-              <span className="font-mono text-gray-800">{product.id}</span>.
+              <span className="font-mono text-foreground">{product.id}</span>.
             </p>
-            <div className="text-[11px] font-semibold text-amber-700 bg-amber-50 p-2 rounded">
+            <div className="text-[11px] font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/20 p-2 rounded-lg">
               Ready for Phase 9 implementation. Static sales attributes intentionally decoupled.
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-lg border border-dashed border-gray-300 shadow-sm space-y-2">
-            <div className="flex items-center gap-2 text-blue-600 font-semibold text-sm">
+          <div className="bg-card p-5 rounded-xl border border-dashed border-border shadow-xs space-y-2">
+            <div className="flex items-center gap-2 text-blue-400 font-semibold text-xs">
               <FileText className="w-4 h-4" />
               Regulatory Intelligence & Approvals
             </div>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               Future connection point: Regulatory approvals, patent expiry dates, DMF filings, and
               marketing authorizations by country will link to product code{' '}
-              <span className="font-mono text-gray-800">{product.product_code}</span>.
+              <span className="font-mono text-foreground">{product.product_code}</span>.
             </p>
-            <div className="text-[11px] font-semibold text-blue-700 bg-blue-50 p-2 rounded">
+            <div className="text-[11px] font-semibold text-blue-400 bg-blue-500/10 border border-blue-500/20 p-2 rounded-lg">
               Ready for Phase 10 integration.
             </div>
           </div>
@@ -1041,44 +1041,47 @@ export default function ProductDetail() {
 
       {/* Archive Modal */}
       {showArchiveModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 space-y-4">
-            <div className="flex items-center justify-between border-b pb-3">
-              <div className="flex items-center gap-2 text-red-600 font-bold">
-                <Archive className="w-5 h-5" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4">
+          <div className="bg-card border border-border rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4 text-foreground">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <div className="flex items-center gap-2 text-red-400 font-bold text-sm">
+                <Archive className="w-5 h-5 text-red-400" />
                 Archive Pharmaceutical Product
               </div>
-              <button onClick={() => setShowArchiveModal(false)} className="text-gray-400">
+              <button
+                onClick={() => setShowArchiveModal(false)}
+                className="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted transition-colors"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <p className="text-xs text-gray-600">
+            <p className="text-xs text-muted-foreground">
               Archiving removes the product from standard active catalogs while permanently preserving
               its identity, presentations, and historical tasks for compliance auditing.
             </p>
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">
-                Reason for Archive <span className="text-red-500">*</span>
+              <label className="block text-xs font-semibold text-foreground mb-1">
+                Reason for Archive <span className="text-red-400">*</span>
               </label>
               <textarea
                 rows={3}
                 placeholder="e.g., Commercial discontinuation, merged into new formulation..."
                 value={archiveReason}
                 onChange={e => setArchiveReason(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md text-sm"
+                className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
               />
             </div>
-            <div className="flex justify-end gap-2 pt-2 border-t">
+            <div className="flex justify-end gap-2 pt-3 border-t border-border">
               <button
                 onClick={() => setShowArchiveModal(false)}
-                className="px-3 py-1.5 border rounded text-xs text-gray-600"
+                className="px-3.5 py-1.5 border border-border rounded-lg text-xs font-medium text-foreground bg-background hover:bg-muted transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleArchive}
                 disabled={actionLoading || !archiveReason.trim()}
-                className="px-4 py-1.5 bg-red-600 text-white rounded text-xs font-medium hover:bg-red-700 disabled:opacity-50"
+                className="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors disabled:opacity-50"
               >
                 Confirm Archive
               </button>
@@ -1089,69 +1092,72 @@ export default function ProductDetail() {
 
       {/* Add Presentation Modal */}
       {showPresentationModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 space-y-4">
-            <div className="flex items-center justify-between border-b pb-3">
-              <div className="font-bold text-gray-900">Add Product Presentation</div>
-              <button onClick={() => setShowPresentationModal(false)} className="text-gray-400">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4">
+          <div className="bg-card border border-border rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4 text-foreground">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <div className="font-bold text-foreground text-sm">Add Product Presentation</div>
+              <button
+                onClick={() => setShowPresentationModal(false)}
+                className="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted transition-colors"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Presentation Name <span className="text-red-500">*</span>
+                <label className="block text-xs font-semibold text-foreground mb-1">
+                  Presentation Name <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
                   placeholder="e.g., 30 Tablets in Alu-Alu Blister Pack"
                   value={presName}
                   onChange={e => setPresName(e.target.value)}
-                  className="w-full px-3 py-2 border rounded text-sm"
+                  className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Pack Size</label>
+                  <label className="block text-xs font-semibold text-foreground mb-1">Pack Size</label>
                   <input
                     type="number"
                     placeholder="e.g., 30"
                     value={packSize}
                     onChange={e => setPackSize(e.target.value ? parseInt(e.target.value, 10) : '')}
-                    className="w-full px-3 py-2 border rounded text-sm"
+                    className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Pack Unit</label>
+                  <label className="block text-xs font-semibold text-foreground mb-1">Pack Unit</label>
                   <input
                     type="text"
                     value={packUnit}
                     onChange={e => setPackUnit(e.target.value)}
-                    className="w-full px-3 py-2 border rounded text-sm"
+                    className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Packaging Type</label>
+                <label className="block text-xs font-semibold text-foreground mb-1">Packaging Type</label>
                 <input
                   type="text"
                   value={packType}
                   onChange={e => setPackType(e.target.value)}
-                  className="w-full px-3 py-2 border rounded text-sm"
+                  className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
                 />
               </div>
             </div>
-            <div className="flex justify-end gap-2 pt-2 border-t">
+            <div className="flex justify-end gap-2 pt-3 border-t border-border">
               <button
                 onClick={() => setShowPresentationModal(false)}
-                className="px-3 py-1.5 border rounded text-xs text-gray-600"
+                className="px-3.5 py-1.5 border border-border rounded-lg text-xs font-medium text-foreground bg-background hover:bg-muted transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAddPresentation}
                 disabled={actionLoading || !presName.trim()}
-                className="px-4 py-1.5 bg-indigo-600 text-white rounded text-xs font-medium hover:bg-indigo-700 disabled:opacity-50"
+                className="px-4 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-xs font-semibold shadow-xs transition-colors disabled:opacity-50"
               >
                 Save Presentation
               </button>
@@ -1162,35 +1168,38 @@ export default function ProductDetail() {
 
       {/* Add Company Modal */}
       {showCompanyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 space-y-4">
-            <div className="flex items-center justify-between border-b pb-3">
-              <div className="font-bold text-gray-900">Add Commercial / Manufacturing Partner</div>
-              <button onClick={() => setShowCompanyModal(false)} className="text-gray-400">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4">
+          <div className="bg-card border border-border rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4 text-foreground">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <div className="font-bold text-foreground text-sm">Add Commercial / Manufacturing Partner</div>
+              <button
+                onClick={() => setShowCompanyModal(false)}
+                className="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted transition-colors"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Company Name <span className="text-red-500">*</span>
+                <label className="block text-xs font-semibold text-foreground mb-1">
+                  Company Name <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
                   placeholder="e.g., Lonza AG"
                   value={companyName}
                   onChange={e => setCompanyName(e.target.value)}
-                  className="w-full px-3 py-2 border rounded text-sm"
+                  className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-foreground mb-1">
                   Relationship Type
                 </label>
                 <select
                   value={relationType}
                   onChange={e => setRelationType(e.target.value)}
-                  className="w-full px-3 py-2 border rounded text-sm bg-white"
+                  className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
                 >
                   <option value="MANUFACTURER">Manufacturer</option>
                   <option value="ORIGINATOR">Originator</option>
@@ -1201,27 +1210,27 @@ export default function ProductDetail() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Country</label>
+                <label className="block text-xs font-semibold text-foreground mb-1">Country</label>
                 <input
                   type="text"
                   placeholder="e.g., CH"
                   value={companyCountry}
                   onChange={e => setCompanyCountry(e.target.value)}
-                  className="w-full px-3 py-2 border rounded text-sm"
+                  className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
                 />
               </div>
             </div>
-            <div className="flex justify-end gap-2 pt-2 border-t">
+            <div className="flex justify-end gap-2 pt-3 border-t border-border">
               <button
                 onClick={() => setShowCompanyModal(false)}
-                className="px-3 py-1.5 border rounded text-xs text-gray-600"
+                className="px-3.5 py-1.5 border border-border rounded-lg text-xs font-medium text-foreground bg-background hover:bg-muted transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAddCompany}
                 disabled={actionLoading || !companyName.trim()}
-                className="px-4 py-1.5 bg-indigo-600 text-white rounded text-xs font-medium hover:bg-indigo-700 disabled:opacity-50"
+                className="px-4 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-xs font-semibold shadow-xs transition-colors disabled:opacity-50"
               >
                 Save Partner
               </button>
@@ -1232,18 +1241,21 @@ export default function ProductDetail() {
 
       {/* Add Country Modal */}
       {showCountryModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 space-y-4">
-            <div className="flex items-center justify-between border-b pb-3">
-              <div className="font-bold text-gray-900">Add Target Country / Market</div>
-              <button onClick={() => setShowCountryModal(false)} className="text-gray-400">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4">
+          <div className="bg-card border border-border rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4 text-foreground">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <div className="font-bold text-foreground text-sm">Add Target Country / Market</div>
+              <button
+                onClick={() => setShowCountryModal(false)}
+                className="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted transition-colors"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Country Code (ISO-2) <span className="text-red-500">*</span>
+                <label className="block text-xs font-semibold text-foreground mb-1">
+                  Country Code (ISO-2) <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
@@ -1251,15 +1263,15 @@ export default function ProductDetail() {
                   placeholder="e.g., DE"
                   value={countryCode}
                   onChange={e => setCountryCode(e.target.value.toUpperCase())}
-                  className="w-full px-3 py-2 border rounded text-sm uppercase font-mono"
+                  className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground uppercase font-mono placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Market Status</label>
+                <label className="block text-xs font-semibold text-foreground mb-1">Market Status</label>
                 <select
                   value={marketStatus}
                   onChange={e => setMarketStatus(e.target.value)}
-                  className="w-full px-3 py-2 border rounded text-sm bg-white"
+                  className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
                 >
                   <option value="COMMERCIAL">Commercialized</option>
                   <option value="LAUNCH_PLANNED">Launch Planned</option>
@@ -1268,28 +1280,28 @@ export default function ProductDetail() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-foreground mb-1">
                   Target Launch Date
                 </label>
                 <input
                   type="date"
                   value={launchDate}
                   onChange={e => setLaunchDate(e.target.value)}
-                  className="w-full px-3 py-2 border rounded text-sm"
+                  className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
                 />
               </div>
             </div>
-            <div className="flex justify-end gap-2 pt-2 border-t">
+            <div className="flex justify-end gap-2 pt-3 border-t border-border">
               <button
                 onClick={() => setShowCountryModal(false)}
-                className="px-3 py-1.5 border rounded text-xs text-gray-600"
+                className="px-3.5 py-1.5 border border-border rounded-lg text-xs font-medium text-foreground bg-background hover:bg-muted transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAddCountry}
                 disabled={actionLoading || !countryCode.trim()}
-                className="px-4 py-1.5 bg-indigo-600 text-white rounded text-xs font-medium hover:bg-indigo-700 disabled:opacity-50"
+                className="px-4 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-xs font-semibold shadow-xs transition-colors disabled:opacity-50"
               >
                 Save Market
               </button>
@@ -1300,33 +1312,36 @@ export default function ProductDetail() {
 
       {/* Add Alias Modal */}
       {showAliasModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 space-y-4">
-            <div className="flex items-center justify-between border-b pb-3">
-              <div className="font-bold text-gray-900">Add Product Alias / Synonym</div>
-              <button onClick={() => setShowAliasModal(false)} className="text-gray-400">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4">
+          <div className="bg-card border border-border rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4 text-foreground">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <div className="font-bold text-foreground text-sm">Add Product Alias / Synonym</div>
+              <button
+                onClick={() => setShowAliasModal(false)}
+                className="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-muted transition-colors"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Alias Value <span className="text-red-500">*</span>
+                <label className="block text-xs font-semibold text-foreground mb-1">
+                  Alias Value <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
                   placeholder="e.g., SKU-ATORV-20-US"
                   value={aliasValue}
                   onChange={e => setAliasValue(e.target.value)}
-                  className="w-full px-3 py-2 border rounded text-sm"
+                  className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Alias Type</label>
+                <label className="block text-xs font-semibold text-foreground mb-1">Alias Type</label>
                 <select
                   value={aliasType}
                   onChange={e => setAliasType(e.target.value)}
-                  className="w-full px-3 py-2 border rounded text-sm bg-white"
+                  className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
                 >
                   <option value="BRAND_NAME">Brand Name</option>
                   <option value="INTERNAL_CODE">Internal Code / SKU</option>
@@ -1336,17 +1351,17 @@ export default function ProductDetail() {
                 </select>
               </div>
             </div>
-            <div className="flex justify-end gap-2 pt-2 border-t">
+            <div className="flex justify-end gap-2 pt-3 border-t border-border">
               <button
                 onClick={() => setShowAliasModal(false)}
-                className="px-3 py-1.5 border rounded text-xs text-gray-600"
+                className="px-3.5 py-1.5 border border-border rounded-lg text-xs font-medium text-foreground bg-background hover:bg-muted transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAddAlias}
                 disabled={actionLoading || !aliasValue.trim()}
-                className="px-4 py-1.5 bg-indigo-600 text-white rounded text-xs font-medium hover:bg-indigo-700 disabled:opacity-50"
+                className="px-4 py-1.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-xs font-semibold shadow-xs transition-colors disabled:opacity-50"
               >
                 Save Alias
               </button>

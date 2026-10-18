@@ -15,7 +15,44 @@ export interface ColumnMapping {
 
 export class RFQService {
   // In-memory fallback stores for local development when Supabase service role key is absent
-  private static fallbackRFQs: any[] = [];
+  private static fallbackRFQs: any[] = [
+    {
+      id: 'r1000000-0000-0000-0000-000000000001',
+      rfq_number: 'RFQ-2026-0041',
+      customer_name: 'Novo Nordisk A/S',
+      title: 'Semaglutide 1.0mg Pre-filled Pen Pilot Supply',
+      description: 'Scale-up batch manufacturing and packaging evaluation',
+      status: 'OPEN',
+      priority: 'HIGH',
+      due_date: '2026-11-15',
+      organization_id: 'a0000000-0000-0000-0000-000000000001',
+      created_at: new Date('2026-03-01').toISOString(),
+    },
+    {
+      id: 'r1000000-0000-0000-0000-000000000002',
+      rfq_number: 'RFQ-2026-0082',
+      customer_name: 'Sanofi SA',
+      title: 'Atorvastatin 20mg Film-Coated Tablets Commercial Supply',
+      description: 'Annual commercial supply 50M units across EU markets',
+      status: 'IN_REVIEW',
+      priority: 'HIGH',
+      due_date: '2026-12-01',
+      organization_id: 'a0000000-0000-0000-0000-000000000001',
+      created_at: new Date('2026-03-05').toISOString(),
+    },
+    {
+      id: 'r1000000-0000-0000-0000-000000000003',
+      rfq_number: 'RFQ-2026-0105',
+      customer_name: 'AstraZeneca PLC',
+      title: 'Amoxicillin / Clavulanate 875mg Scale-Up',
+      description: 'High-speed blister packaging and serialization validation',
+      status: 'OPEN',
+      priority: 'MEDIUM',
+      due_date: '2026-11-30',
+      organization_id: 'a0000000-0000-0000-0000-000000000001',
+      created_at: new Date('2026-03-08').toISOString(),
+    },
+  ];
   private static fallbackTemplates: any[] = [
     {
       id: 'a1000000-0000-0000-0000-000000000001',

@@ -6,6 +6,9 @@ import {
   CostComponentInput,
   UnitEconomicsResult 
 } from './commercial-calculation.service';
+import { CDMOBenchmarkingService, BenchmarkingResult } from './cdmo-benchmarking.service';
+import { CompetitorCapabilityService } from './competitor-capability.service';
+import { CommercialDecisionReportService } from './commercial-decision-report.service';
 import * as XLSX from 'xlsx';
 import crypto from 'crypto';
 
@@ -606,4 +609,67 @@ export class CommercialEvaluationService {
 
     return { buffer, fileName };
   }
+
+  // ==========================================================================
+  // CDMO COMPETITOR BENCHMARKING & COMMERCIAL DECISION INTELLIGENCE
+  // ==========================================================================
+
+  async getDiscoveredCompetitors(authHeader: string, organizationId: string, id: string) {
+    const ev = await this.getEvaluation(authHeader, organizationId, id);
+    let supabase: any = null;
+    try {
+      supabase = createSupabaseClientForUser(authHeader);
+    } catch {
+      // Fallback
+    }
+
+    const capabilityService = new CompetitorCapabilityService(supabase, organizationId);
+    return capabilityService.discoverCompetitors({
+      moleculeOrProduct: ev.title || 'Oral Solid Dose',
+      dosageForm: ev.dosage_form || 'TABLET',
+      targetMarketCountry: ev.target_market_country || 'US',
+      requiredVolume: ev.pricing?.quantity || 50000,
+      isSterileRequired: Boolean(ev.is_sterile_required),
+    });
+  }
+
+  async benchmarkEvaluation(authHeader: string, organizationId: string, id: string, userId: string): Promise<BenchmarkingResult> {
+    const ev = await this.getEvaluation(authHeader, organizationId, id);
+    let supabase: any = null;
+    try {
+      supabase = createSupabaseClientForUser(authHeader);
+    } catch {
+      // Fallback
+    }
+
+    const benchmarkService = new CDMOBenchmarkingService(supabase, organizationId, userId);
+    return benchmarkService.runBenchmark(ev);
+  }
+
+  async getBenchmark(authHeader: string, organizationId: string, id: string, userId: string): Promise<BenchmarkingResult> {
+    let supabase: any = null;
+    try {
+      supabase = createSupabaseClientForUser(authHeader);
+    } catch {
+      // Fallback
+    }
+
+    const benchmarkService = new CDMOBenchmarkingService(supabase, organizationId, userId);
+    const existing = await benchmarkService.getBenchmark(id);
+    if (existing) {
+      return existing;
+    }
+
+    // If not yet generated, execute automatically
+    const ev = await this.getEvaluation(authHeader, organizationId, id);
+    return benchmarkService.runBenchmark(ev);
+  }
+
+  async exportCDMODecisionReport(authHeader: string, organizationId: string, id: string, userId: string) {
+    const ev = await this.getEvaluation(authHeader, organizationId, id);
+    const benchmark = await this.getBenchmark(authHeader, organizationId, id, userId);
+
+    return CommercialDecisionReportService.generateManagementExcelWorkbook(ev, benchmark);
+  }
 }
+

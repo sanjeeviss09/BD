@@ -37,7 +37,8 @@ export default function AIConfigModal({ isOpen, onClose, getHeaders, onConfigSav
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
-  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [discoveringModels, setDiscoveringModels] = useState(false);
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string; details?: any } | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
@@ -61,6 +62,34 @@ export default function AIConfigModal({ isOpen, onClose, getHeaders, onConfigSav
       setErrorMsg('Failed to load AI configuration');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDiscoverModels = async () => {
+    setDiscoveringModels(true);
+    setErrorMsg('');
+    try {
+      const endpoint = config.api_endpoint ? `&api_endpoint=${encodeURIComponent(config.api_endpoint)}` : '';
+      const res = await fetch(
+        `http://localhost:4000/api/production-feasibility/ai-config/models?provider_name=${config.provider_name}${endpoint}`,
+        {
+          headers: getHeaders(),
+        }
+      );
+      const data = await res.json();
+      if (data.success && data.models) {
+        setConfig(prev => ({ ...prev, discovered_models: data.models }));
+        setSuccessMsg(`Discovered ${data.models.length} model(s) from ${config.provider_name}`);
+        if (data.models.length > 0 && !config.model_name) {
+          setConfig(prev => ({ ...prev, model_name: data.models[0] }));
+        }
+      } else {
+        setErrorMsg(data.error || 'Failed to discover models from provider');
+      }
+    } catch (err: any) {
+      setErrorMsg('Model discovery request failed');
+    } finally {
+      setDiscoveringModels(false);
     }
   };
 
@@ -117,7 +146,13 @@ export default function AIConfigModal({ isOpen, onClose, getHeaders, onConfigSav
       const data = await res.json();
       setTestResult(data);
       if (data.success) {
-        setConfig(prev => ({ ...prev, last_test_status: 'SUCCESS' }));
+        setConfig(prev => ({
+          ...prev,
+          last_test_status: 'SUCCESS',
+          discovered_models: data.details?.models || prev.discovered_models,
+          verified_capabilities: data.details?.verifiedCapabilities || prev.verified_capabilities,
+          embedding_dimensions: data.details?.verifiedCapabilities?.embeddingDimensions || prev.embedding_dimensions,
+        }));
       } else {
         setConfig(prev => ({ ...prev, last_test_status: 'FAILED' }));
       }
@@ -142,7 +177,7 @@ export default function AIConfigModal({ isOpen, onClose, getHeaders, onConfigSav
             <div>
               <h3 className="font-semibold text-foreground text-sm">Enterprise AI Provider Configuration</h3>
               <p className="text-[11px] text-muted-foreground">
-                Grounded CDMO intelligence and automated evaluation assistance
+                Grounded CDMO intelligence, meeting automation, and proxy orchestration
               </p>
             </div>
           </div>
@@ -175,6 +210,25 @@ export default function AIConfigModal({ isOpen, onClose, getHeaders, onConfigSav
               </div>
             )}
 
+            {/* Provider Enable / Disable Toggle */}
+            <div className="flex items-center justify-between p-3.5 bg-muted/40 border border-border rounded-lg">
+              <div>
+                <span className="text-xs font-semibold text-foreground">Enable AI Capabilities</span>
+                <p className="text-[11px] text-muted-foreground">
+                  When disabled, BDIQ operates in deterministic, verified calculation mode.
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={config.is_enabled}
+                  onChange={e => setConfig(prev => ({ ...prev, is_enabled: e.target.checked }))}
+                  className="sr-only peer"
+                />
+                <div className="w-9 h-5 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-foreground"></div>
+              </label>
+            </div>
+
             {/* Provider Selection */}
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -185,15 +239,38 @@ export default function AIConfigModal({ isOpen, onClose, getHeaders, onConfigSav
                   value={config.provider_name}
                   onChange={e => {
                     const p = e.target.value as any;
+                    let defaultModel = 'gpt-4o';
+                    let defaultEndpoint = '';
+                    if (p === 'COPILOT_PROXY') {
+                      defaultModel = 'gpt-4o';
+                      defaultEndpoint = 'http://127.0.0.1:4141/v1';
+                    } else if (p === 'NVIDIA') {
+                      defaultModel = 'nvidia/nemotron-3-ultra-550b-a55b';
+                      defaultEndpoint = 'https://integrate.api.nvidia.com/v1/chat/completions';
+                    } else if (p === 'ANTHROPIC') {
+                      defaultModel = 'claude-3-5-sonnet-20241022';
+                    } else if (p === 'GEMINI') {
+                      defaultModel = 'gemini-1.5-pro';
+                    }
                     setConfig(prev => ({
                       ...prev,
                       provider_name: p,
-                      provider_display_name: `${p} Cognitive Engine`,
-                      model_name: p === 'ANTHROPIC' ? 'claude-3-5-sonnet-20241022' : p === 'GEMINI' ? 'gemini-1.5-pro' : 'gpt-4o'
+                      provider_display_name:
+                        p === 'COPILOT_PROXY'
+                          ? 'GitHub Copilot API Proxy (Local Gateway)'
+                          : p === 'NVIDIA'
+                          ? 'NVIDIA Enterprise AI (Nemotron 3 Ultra + Parse + Retriever)'
+                          : `${p} Cognitive Engine`,
+                      model_name: defaultModel,
+                      api_endpoint: defaultEndpoint || prev.api_endpoint,
+                      // Disable by default if switching to Copilot Proxy until tested
+                      is_enabled: p === 'COPILOT_PROXY' ? false : prev.is_enabled,
                     }));
                   }}
                   className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
                 >
+                  <option value="COPILOT_PROXY">GitHub Copilot API Proxy (ericc-ch/copilot-api)</option>
+                  <option value="NVIDIA">NVIDIA Enterprise AI (Nemotron 3 Ultra + Parse + Retriever)</option>
                   <option value="OPENAI">OpenAI (GPT-4o / O3)</option>
                   <option value="ANTHROPIC">Anthropic (Claude 3.5 Sonnet)</option>
                   <option value="GEMINI">Google DeepMind (Gemini 1.5 Pro)</option>
@@ -204,19 +281,109 @@ export default function AIConfigModal({ isOpen, onClose, getHeaders, onConfigSav
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-foreground mb-1.5">
-                  Model Identifier
-                </label>
-                <input
-                  type="text"
-                  value={config.model_name}
-                  onChange={e => setConfig(prev => ({ ...prev, model_name: e.target.value }))}
-                  placeholder="e.g. gpt-4o"
-                  className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-foreground font-mono"
-                  required
-                />
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-medium text-foreground">
+                    Model Identifier
+                  </label>
+                  {config.provider_name === 'COPILOT_PROXY' && (
+                    <button
+                      type="button"
+                      onClick={handleDiscoverModels}
+                      disabled={discoveringModels}
+                      className="text-[10px] text-foreground hover:underline inline-flex items-center gap-1 disabled:opacity-50"
+                    >
+                      <RefreshCw className={`w-2.5 h-2.5 ${discoveringModels ? 'animate-spin' : ''}`} />
+                      Discover Models
+                    </button>
+                  )}
+                </div>
+
+                {config.discovered_models && config.discovered_models.length > 0 ? (
+                  <select
+                    value={config.model_name}
+                    onChange={e => setConfig(prev => ({ ...prev, model_name: e.target.value }))}
+                    className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-foreground font-mono"
+                  >
+                    {config.discovered_models.map(m => (
+                      <option key={m} value={m}>
+                        {m}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    value={config.model_name}
+                    onChange={e => setConfig(prev => ({ ...prev, model_name: e.target.value }))}
+                    placeholder="e.g. gpt-4o"
+                    className="w-full px-3 py-2 bg-background border border-border rounded-lg text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-foreground font-mono"
+                    required
+                  />
+                )}
               </div>
             </div>
+
+            {config.provider_name === 'COPILOT_PROXY' && (
+              <div className="p-3.5 bg-blue-500/5 border border-blue-500/20 rounded-lg space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-semibold text-blue-800 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5" /> Copilot API Proxy Architecture
+                  </span>
+                  <span className="text-[10px] bg-blue-500/20 text-blue-800 dark:text-blue-300 font-medium px-2 py-0.5 rounded-full">
+                    Self-Hosted / Gateway Mode
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-[11px]">
+                  <div className="bg-background/80 p-2 rounded border border-border">
+                    <p className="font-semibold text-foreground">Chat & Reasoning</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      {config.verified_capabilities?.chat ? '✓ Verified Compatible' : 'Probed on test'}
+                    </p>
+                  </div>
+                  <div className="bg-background/80 p-2 rounded border border-border">
+                    <p className="font-semibold text-foreground">Structured JSON</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      {config.verified_capabilities?.structuredOutput ? '✓ Verified Schema' : 'Probed on test'}
+                    </p>
+                  </div>
+                  <div className="bg-background/80 p-2 rounded border border-border">
+                    <p className="font-semibold text-foreground">Vector Embeddings</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      {config.verified_capabilities?.embeddings
+                        ? `✓ ${config.verified_capabilities.embeddingDimensions || 1536} dims`
+                        : 'Keyword Fallback Active'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {config.provider_name === 'NVIDIA' && (
+              <div className="p-3.5 bg-emerald-500/5 border border-emerald-500/20 rounded-lg space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-semibold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5" /> NVIDIA Enterprise Tri-Engine Active
+                  </span>
+                  <span className="text-[10px] bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 font-medium px-2 py-0.5 rounded-full">
+                    Production Integrated
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-[11px]">
+                  <div className="bg-background/80 p-2 rounded border border-border">
+                    <p className="font-semibold text-foreground">Nemotron 3 Ultra 550B</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">A55B Reasoning & CDMO Synthesis</p>
+                  </div>
+                  <div className="bg-background/80 p-2 rounded border border-border">
+                    <p className="font-semibold text-foreground">Nemotron Parse</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Visual Layout & Table Parser</p>
+                  </div>
+                  <div className="bg-background/80 p-2 rounded border border-border">
+                    <p className="font-semibold text-foreground">NeMo Retriever</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Semantic Knowledge & Evidence</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Custom Endpoint (Optional) */}
             <div>

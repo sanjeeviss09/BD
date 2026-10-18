@@ -51,7 +51,7 @@ export const GlobalMarketMap: React.FC<GlobalMarketMapProps> = ({ className = ''
         code: c.iso2,
         name: c.country,
         region: c.region,
-        marketSizeUSD: c.marketValueFormatted || 'N/A',
+        marketSizeUSD: c.marketValueFormatted || (typeof c.marketValue === 'number' ? (c.marketValue >= 1e9 ? '$' + (c.marketValue / 1e9).toFixed(2) + 'B' : '$' + (c.marketValue / 1e6).toFixed(1) + 'M') : 'N/A'),
         cagrPercent: c.salesGrowth || 'N/A',
         competitorsCount: c.competitorCount || 0,
         activeOpportunities: c.activeOpportunities || 0,

@@ -31,6 +31,7 @@ export default function NotificationCenterDropdown({ onOpenSettings }: Notificat
     markAsUnread,
     markAllAsRead,
     dismissNotification,
+    openSettings,
   } = useNotifications();
 
   const navigate = useNavigate();
@@ -186,27 +187,20 @@ export default function NotificationCenterDropdown({ onOpenSettings }: Notificat
                   Mark all read
                 </button>
               )}
-              {onOpenSettings ? (
-                <button
-                  onClick={() => {
-                    setIsOpen(false);
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  if (onOpenSettings) {
                     onOpenSettings();
-                  }}
-                  className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted"
-                  title="Notification Settings"
-                >
-                  <Settings className="w-3.5 h-3.5" />
-                </button>
-              ) : (
-                <Link
-                  to="/meetings/settings"
-                  onClick={() => setIsOpen(false)}
-                  className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted"
-                  title="Notification Settings"
-                >
-                  <Settings className="w-3.5 h-3.5" />
-                </Link>
-              )}
+                  } else {
+                    openSettings();
+                  }
+                }}
+                className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted"
+                title="Notification Settings"
+              >
+                <Settings className="w-3.5 h-3.5" />
+              </button>
             </div>
           </div>
 

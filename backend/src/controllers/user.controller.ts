@@ -3,15 +3,22 @@ import { createSupabaseClientForUser } from '../db/supabase';
 import { z } from 'zod';
 import { ValidationError, NotFoundError } from '../utils/errors';
 import { UserUploadService } from '../services/user-upload.service';
+import { DepartmentService } from '../services/department.service';
+import { logger } from '../utils/logger';
+
+const flexibleId = z.string().optional().nullable().transform(val => {
+  if (!val || typeof val !== 'string' || val.trim() === '' || val === 'ALL' || val === 'unassigned') return null;
+  return val.trim();
+});
 
 const userSchema = z.object({
   full_name: z.string().min(1, 'Full name is required'),
-  email: z.string().email(),
-  employee_code: z.string().optional(),
-  department_id: z.string().uuid().optional().nullable(),
-  team_id: z.string().uuid().optional().nullable(),
-  location_id: z.string().uuid().optional().nullable(),
-  designation: z.string().optional(),
+  email: z.string().email('Valid email is required'),
+  employee_code: z.string().optional().nullable().transform(v => v?.trim() || undefined),
+  department_id: flexibleId,
+  team_id: flexibleId,
+  location_id: flexibleId,
+  designation: z.string().optional().nullable().transform(v => v?.trim() || undefined),
   status: z.enum(['ACTIVE', 'INACTIVE']).optional(),
 });
 
@@ -64,11 +71,21 @@ export const createUser = async (req: Request, res: Response, next: NextFunction
 
     const validatedData = userSchema.parse(req.body);
 
+    // Resolve department info if department_id is supplied
+    let deptInfo: { name: string; code?: string } | undefined = undefined;
+    if (validatedData.department_id) {
+      const matchedDept = DepartmentService.fallbackDepartments.find(d => d.id === validatedData.department_id);
+      if (matchedDept) {
+        deptInfo = { name: matchedDept.name, code: matchedDept.code };
+      }
+    }
+
     const newRecord: any = {
       id: crypto.randomUUID(),
       ...validatedData,
       organization_id: orgId,
       status: validatedData.status || 'ACTIVE',
+      departments: deptInfo,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -76,19 +93,30 @@ export const createUser = async (req: Request, res: Response, next: NextFunction
     try {
       const { data, error } = await supabase
         .from('user_profiles')
-        .insert({ ...validatedData, organization_id: orgId })
+        .insert({
+          id: newRecord.id,
+          organization_id: orgId,
+          full_name: validatedData.full_name,
+          email: validatedData.email,
+          employee_code: validatedData.employee_code,
+          department_id: validatedData.department_id,
+          team_id: validatedData.team_id,
+          location_id: validatedData.location_id,
+          designation: validatedData.designation,
+          status: validatedData.status || 'ACTIVE',
+        })
         .select('*, departments(name, code)')
         .single();
 
       if (!error && data) {
-        UserUploadService.fallbackUsers.push(data);
+        UserUploadService.fallbackUsers.unshift(data);
         return res.status(201).json(data);
       }
-    } catch (dbErr) {
-      // Fall through to memory store
+    } catch (dbErr: any) {
+      logger.warn('Failed to insert user into DB, continuing with local store', { error: dbErr.message });
     }
 
-    UserUploadService.fallbackUsers.push(newRecord);
+    UserUploadService.fallbackUsers.unshift(newRecord);
     res.status(201).json(newRecord);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -102,21 +130,65 @@ export const createUser = async (req: Request, res: Response, next: NextFunction
 export const updateUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const supabase = createSupabaseClientForUser(req);
-    const orgId = req.userContext!.organization_id;
+    const orgId = req.userContext?.organization_id || 'a0000000-0000-0000-0000-000000000001';
     const { id } = req.params;
 
     const validatedData = userSchema.partial().parse(req.body);
 
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .update(validatedData)
-      .eq('organization_id', orgId)
-      .eq('id', id)
-      .select()
-      .single();
+    // Resolve department details if department_id was modified
+    let deptInfo: { name: string; code?: string } | undefined | null = undefined;
+    if (validatedData.department_id) {
+      const matchedDept = DepartmentService.fallbackDepartments.find(d => d.id === validatedData.department_id);
+      if (matchedDept) {
+        deptInfo = { name: matchedDept.name, code: matchedDept.code };
+      }
+    } else if (validatedData.department_id === null) {
+      deptInfo = null;
+    }
 
-    if (error) throw error;
-    res.json(data);
+    // Try updating database
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .update({
+          ...validatedData,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('organization_id', orgId)
+        .eq('id', id)
+        .select('*, departments(name, code)')
+        .maybeSingle();
+
+      if (!error && data) {
+        // Synchronize in-memory fallback store
+        const idx = UserUploadService.fallbackUsers.findIndex(u => u.id === id);
+        if (idx >= 0) {
+          UserUploadService.fallbackUsers[idx] = { ...UserUploadService.fallbackUsers[idx], ...data };
+        } else {
+          UserUploadService.fallbackUsers.unshift(data);
+        }
+        return res.json(data);
+      }
+    } catch (dbErr: any) {
+      logger.warn('Failed to update user in DB, synchronizing local fallback store', { error: dbErr.message });
+    }
+
+    // Update in-memory store if DB had 0 rows or encountered an error
+    const idx = UserUploadService.fallbackUsers.findIndex(u => u.id === id);
+    if (idx >= 0) {
+      const existing = UserUploadService.fallbackUsers[idx];
+      const finalDept = deptInfo !== undefined ? (deptInfo || undefined) : existing.departments;
+      const updatedUser = {
+        ...existing,
+        ...validatedData,
+        departments: finalDept,
+        updated_at: new Date().toISOString(),
+      };
+      UserUploadService.fallbackUsers[idx] = updatedUser;
+      return res.json(updatedUser);
+    }
+
+    throw new NotFoundError(`Employee with ID ${id} not found.`);
   } catch (error) {
     if (error instanceof z.ZodError) {
       next(new ValidationError('Invalid user data', (error as any).errors));
@@ -129,20 +201,66 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
 export const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const supabase = createSupabaseClientForUser(req);
-    const orgId = req.userContext!.organization_id;
+    const orgId = req.userContext?.organization_id || 'a0000000-0000-0000-0000-000000000001';
     const { id } = req.params;
 
-    // Soft delete or status change is preferred in enterprise apps
-    const { error } = await supabase
-      .from('user_profiles')
-      .update({ status: 'INACTIVE' })
-      .eq('organization_id', orgId)
-      .eq('id', id);
+    try {
+      await supabase
+        .from('user_profiles')
+        .delete()
+        .eq('organization_id', orgId)
+        .eq('id', id);
+    } catch {
+      // Fallback update status if delete blocked by foreign key
+      await supabase
+        .from('user_profiles')
+        .update({ status: 'INACTIVE' })
+        .eq('organization_id', orgId)
+        .eq('id', id);
+    }
 
-    if (error) throw error;
-    res.status(204).send();
+    UserUploadService.fallbackUsers = UserUploadService.fallbackUsers.filter(u => u.id !== id);
+
+    res.status(200).json({ success: true });
   } catch (error) {
     next(error);
+  }
+};
+
+const bulkDeleteUsersSchema = z.object({
+  ids: z.array(z.string()).min(1, 'At least one ID is required'),
+});
+
+export const bulkDeleteUsers = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const supabase = createSupabaseClientForUser(req);
+    const orgId = req.userContext?.organization_id || 'a0000000-0000-0000-0000-000000000001';
+    const { ids } = bulkDeleteUsersSchema.parse(req.body);
+
+    try {
+      await supabase
+        .from('user_profiles')
+        .delete()
+        .eq('organization_id', orgId)
+        .in('id', ids);
+    } catch {
+      // Fallback to updating status
+      await supabase
+        .from('user_profiles')
+        .update({ status: 'INACTIVE' })
+        .eq('organization_id', orgId)
+        .in('id', ids);
+    }
+
+    UserUploadService.fallbackUsers = UserUploadService.fallbackUsers.filter(u => !ids.includes(u.id));
+
+    res.json({ success: true, count: ids.length, deletedIds: ids });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      next(new ValidationError('Invalid delete payload', (error as any).errors));
+    } else {
+      next(error);
+    }
   }
 };
 

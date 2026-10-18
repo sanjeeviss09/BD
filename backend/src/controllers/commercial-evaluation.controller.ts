@@ -162,4 +162,75 @@ export class CommercialEvaluationController {
       next(error);
     }
   };
+
+  getCompetitors = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { authHeader, organizationId } = this.getAuthContext(req);
+      if (!authHeader) return res.status(401).json({ error: 'Unauthorized' });
+
+      const competitors = await this.commercialService.getDiscoveredCompetitors(
+        authHeader,
+        organizationId,
+        req.params.id as string
+      );
+      res.json(competitors);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  benchmarkEvaluation = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { authHeader, organizationId, userId } = this.getAuthContext(req);
+      if (!authHeader) return res.status(401).json({ error: 'Unauthorized' });
+
+      const benchmark = await this.commercialService.benchmarkEvaluation(
+        authHeader,
+        organizationId,
+        req.params.id as string,
+        userId
+      );
+      res.json(benchmark);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  getBenchmark = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { authHeader, organizationId, userId } = this.getAuthContext(req);
+      if (!authHeader) return res.status(401).json({ error: 'Unauthorized' });
+
+      const benchmark = await this.commercialService.getBenchmark(
+        authHeader,
+        organizationId,
+        req.params.id as string,
+        userId
+      );
+      res.json(benchmark);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  exportCDMODecisionReport = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { authHeader, organizationId, userId } = this.getAuthContext(req);
+      if (!authHeader) return res.status(401).json({ error: 'Unauthorized' });
+
+      const { buffer, fileName } = await this.commercialService.exportCDMODecisionReport(
+        authHeader,
+        organizationId,
+        req.params.id as string,
+        userId
+      );
+
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+      res.send(buffer);
+    } catch (error) {
+      next(error);
+    }
+  };
 }
+

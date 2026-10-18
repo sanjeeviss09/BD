@@ -20,8 +20,11 @@ interface NotificationContextType {
   isLoading: boolean;
   activeMeetingNotesId: string | null;
   activeReviewMeetingId: string | null;
+  isSettingsOpen: boolean;
 
   // Actions
+  openSettings: () => void;
+  closeSettings: () => void;
   fetchNotifications: (category?: string, search?: string) => Promise<void>;
   markAsRead: (id: string) => Promise<void>;
   markAsUnread: (id: string) => Promise<void>;
@@ -62,6 +65,10 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   // Active Modals
   const [activeMeetingNotesId, setActiveMeetingNotesId] = useState<string | null>(null);
   const [activeReviewMeetingId, setActiveReviewMeetingId] = useState<string | null>(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  const openSettings = useCallback(() => setIsSettingsOpen(true), []);
+  const closeSettings = useCallback(() => setIsSettingsOpen(false), []);
 
   // Browser Permission
   const [browserPermission, setBrowserPermission] = useState<NotificationPermission | 'unsupported'>('default');
@@ -455,6 +462,9 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         isLoading,
         activeMeetingNotesId,
         activeReviewMeetingId,
+        isSettingsOpen,
+        openSettings,
+        closeSettings,
         fetchNotifications,
         markAsRead,
         markAsUnread,

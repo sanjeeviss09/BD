@@ -25,7 +25,7 @@ export interface DepartmentFilterOptions {
 
 export class DepartmentService {
   // Resilient memory cache / fallback store for development and offline operations
-  private static fallbackDepartments: DepartmentRecord[] = [
+  public static fallbackDepartments: DepartmentRecord[] = [
     {
       id: 'd1000000-0000-0000-0000-000000000001',
       organization_id: 'a0000000-0000-0000-0000-000000000001',
@@ -38,7 +38,7 @@ export class DepartmentService {
     },
     {
       id: 'd1000000-0000-0000-0000-000000000002',
-      organization_id: 'a0000000-0000-0000-0000-000000000002',
+      organization_id: 'a0000000-0000-0000-0000-000000000001',
       code: 'FORM-01',
       name: 'Formulation & Pre-formulation R&D',
       description: 'Oral solid dose & injectable formulation, pilot batches, bioavailability, and scale-up trials',
@@ -48,7 +48,7 @@ export class DepartmentService {
     },
     {
       id: 'd1000000-0000-0000-0000-000000000003',
-      organization_id: 'a0000000-0000-0000-0000-000000000003',
+      organization_id: 'a0000000-0000-0000-0000-000000000001',
       code: 'QA-01',
       name: 'Quality Assurance',
       description: 'GMP Compliance, site audits, batch record reviews, CAPA, change controls, and release',
@@ -58,7 +58,7 @@ export class DepartmentService {
     },
     {
       id: 'd1000000-0000-0000-0000-000000000004',
-      organization_id: 'a0000000-0000-0000-0000-000000000004',
+      organization_id: 'a0000000-0000-0000-0000-000000000001',
       code: 'QC-01',
       name: 'Quality Control',
       description: 'Analytical testing, HPLC/GC stability chambers, dissolution testing, and raw material qualification',
@@ -68,7 +68,7 @@ export class DepartmentService {
     },
     {
       id: 'd1000000-0000-0000-0000-000000000005',
-      organization_id: 'a0000000-0000-0000-0000-000000000005',
+      organization_id: 'a0000000-0000-0000-0000-000000000001',
       code: 'PROD-01',
       name: 'Manufacturing & Commercial Production',
       description: 'OSD, sterile injectables, packaging lines, granulation, coating, and batch manufacturing operations',
@@ -78,7 +78,7 @@ export class DepartmentService {
     },
     {
       id: 'd1000000-0000-0000-0000-000000000006',
-      organization_id: 'a0000000-0000-0000-0000-000000000006',
+      organization_id: 'a0000000-0000-0000-0000-000000000001',
       code: 'BD-01',
       name: 'Business Development & Licensing',
       description: 'Client licensing, customer negotiations, RFQ commercial feasibility, contracts, and partnerships',
@@ -88,7 +88,7 @@ export class DepartmentService {
     },
     {
       id: 'd1000000-0000-0000-0000-000000000007',
-      organization_id: 'a0000000-0000-0000-0000-000000000007',
+      organization_id: 'a0000000-0000-0000-0000-000000000001',
       code: 'SCM-01',
       name: 'Supply Chain & Procurement',
       description: 'Active Pharmaceutical Ingredients (API) procurement, excipient sourcing, cold-chain logistics',
@@ -98,7 +98,7 @@ export class DepartmentService {
     },
     {
       id: 'd1000000-0000-0000-0000-000000000008',
-      organization_id: 'a0000000-0000-0000-0000-000000000008',
+      organization_id: 'a0000000-0000-0000-0000-000000000001',
       code: 'ENG-01',
       name: 'Engineering & Maintenance',
       description: 'HVAC qualification, cleanroom certifications, equipment calibration, process automation',
@@ -597,4 +597,7 @@ export class DepartmentService {
       departments: processedDepartments,
     };
   }
+
 }
+
+

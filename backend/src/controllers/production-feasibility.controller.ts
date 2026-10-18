@@ -493,5 +493,21 @@ export class ProductionFeasibilityController {
       next(err);
     }
   }
+
+  static async discoverAIModels(req: Request, res: Response, next: NextFunction) {
+    try {
+      const supabase = createSupabaseClientForUser(req);
+      const orgId = req.userContext!.organization_id;
+      const userId = req.user!.id;
+
+      const service = new AIProviderService(supabase, orgId, userId);
+      const providerName = req.query.provider_name as string | undefined;
+      const endpoint = req.query.api_endpoint as string | undefined;
+      const result = await service.discoverAvailableModels(providerName, endpoint);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 

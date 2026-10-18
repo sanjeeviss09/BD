@@ -19,6 +19,13 @@ function getHeaders(token?: string) {
   };
 }
 
+function extractErrorMessage(err: any, fallback: string): string {
+  if (err?.error?.message) return err.error.message;
+  if (err?.message) return err.message;
+  if (typeof err?.error === 'string') return err.error;
+  return fallback;
+}
+
 export const meetingApi = {
   // 1. Dashboard Overview
   async getDashboardOverview(token?: string, filters: Record<string, string> = {}): Promise<MeetingDashboardOverview> {
@@ -26,7 +33,10 @@ export const meetingApi = {
     const res = await fetch(`${API_BASE}/dashboard/overview?${params.toString()}`, {
       headers: getHeaders(token)
     });
-    if (!res.ok) throw new Error('Failed to load meeting dashboard');
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(extractErrorMessage(err, 'Failed to load meeting dashboard'));
+    }
     return res.json();
   },
 
@@ -36,7 +46,10 @@ export const meetingApi = {
     const res = await fetch(`${API_BASE}?${params.toString()}`, {
       headers: getHeaders(token)
     });
-    if (!res.ok) throw new Error('Failed to list meetings');
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(extractErrorMessage(err, 'Failed to list meetings'));
+    }
     return res.json();
   },
 
@@ -48,7 +61,7 @@ export const meetingApi = {
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || 'Failed to schedule meeting');
+      throw new Error(extractErrorMessage(err, 'Failed to schedule meeting'));
     }
     return res.json();
   },
@@ -216,6 +229,43 @@ export const meetingApi = {
     return res.json();
   },
 
+  async confirmDecision(decisionId: string, isConfirmed: boolean = true, token?: string): Promise<MeetingDecision> {
+    const res = await fetch(`${API_BASE}/decisions/${decisionId}/confirm`, {
+      method: 'PATCH',
+      headers: getHeaders(token),
+      body: JSON.stringify({ is_confirmed: isConfirmed })
+    });
+    if (!res.ok) throw new Error('Failed to update decision confirmation status');
+    return res.json();
+  },
+
+  // MOM Generation & Confirmation
+  async generateMOMDraft(meetingId: string, options?: { transcript?: string; prompt?: string }, token?: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/${meetingId}/mom/generate`, {
+      method: 'POST',
+      headers: getHeaders(token),
+      body: JSON.stringify(options || {})
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to generate MOM draft');
+    }
+    return res.json();
+  },
+
+  async confirmMOM(meetingId: string, momDraft: any, token?: string): Promise<Meeting> {
+    const res = await fetch(`${API_BASE}/${meetingId}/mom/confirm`, {
+      method: 'POST',
+      headers: getHeaders(token),
+      body: JSON.stringify(momDraft)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to confirm Minutes of Meeting');
+    }
+    return res.json();
+  },
+
   // 7. Closure Wizard
   async executeMeetingClosure(meetingId: string, closureData: any, token?: string): Promise<Meeting> {
     const res = await fetch(`${API_BASE}/${meetingId}/closure`, {
@@ -271,5 +321,46 @@ export const meetingApi = {
     });
     if (!res.ok) throw new Error('Failed to create meeting template');
     return res.json();
+  },
+
+  // 10. AI Meeting Intelligence & Live Copilot
+  async generateAIMeetingIntelligence(id: string, payload: any = {}, token?: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/${id}/ai-intelligence`, {
+      method: 'POST',
+      headers: getHeaders(token),
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to generate meeting AI intelligence');
+    }
+    return res.json();
+  },
+
+  async applyAISuggestions(id: string, payload: any, token?: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/${id}/ai-intelligence/apply`, {
+      method: 'POST',
+      headers: getHeaders(token),
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to apply AI suggestions');
+    }
+    return res.json();
+  },
+
+  async queryCopilot(id: string, query: string, token?: string): Promise<{ query: string; answer: string; citations: string[]; suggestedFollowUps: string[] }> {
+    const res = await fetch(`${API_BASE}/${id}/ai-intelligence/query`, {
+      method: 'POST',
+      headers: getHeaders(token),
+      body: JSON.stringify({ query })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to query Copilot');
+    }
+    return res.json();
   }
 };
+

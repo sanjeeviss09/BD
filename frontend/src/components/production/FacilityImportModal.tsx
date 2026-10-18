@@ -28,6 +28,8 @@ export default function FacilityImportModal({
 }: FacilityImportModalProps) {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [preview, setPreview] = useState<FacilityImportPreview | null>(null);
   const [committing, setCommitting] = useState(false);
   const [activeTab, setActiveTab] = useState<'facilities' | 'lines' | 'equipment'>('facilities');
@@ -37,36 +39,67 @@ export default function FacilityImportModal({
 
   if (!isOpen) return null;
 
-  const handleDownloadTemplate = () => {
-    window.open('http://localhost:4000/api/production-feasibility/facilities/template/download', '_blank');
+  const resolveHeaders = (): Record<string, string> => {
+    const headers = getHeaders ? { ...getHeaders() } : {};
+    if (!headers.Authorization) {
+      const token = localStorage.getItem('token') || 'dev-admin-token';
+      headers.Authorization = `Bearer ${token}`;
+    }
+    return headers;
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
-      setPreview(null);
-      setErrorMsg('');
-      setSuccessMsg('');
+  const handleDownloadTemplate = async () => {
+    setDownloading(true);
+    setErrorMsg('');
+    try {
+      const headers = resolveHeaders();
+      const res = await fetch('http://localhost:4000/api/production-feasibility/facilities/template/download', {
+        headers,
+      });
+
+      if (!res.ok) {
+        throw new Error(`Failed to download template (Server returned ${res.status})`);
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'bdiq_facility_configuration_template.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to download verified template');
+    } finally {
+      setDownloading(false);
     }
   };
 
-  const handleScanAndPreview = async () => {
-    if (!file) return;
-    setUploading(true);
+  const scanFile = async (targetFile: File) => {
+    setFile(targetFile);
+    setPreview(null);
     setErrorMsg('');
+    setSuccessMsg('');
+    setUploading(true);
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', targetFile);
+
+      const headers: Record<string, string> = { ...resolveHeaders() };
+      // CRITICAL: delete Content-Type so browser can set multipart/form-data boundary
+      delete (headers as any)['Content-Type'];
 
       const res = await fetch('http://localhost:4000/api/production-feasibility/facilities/import/preview', {
         method: 'POST',
-        headers: getHeaders(),
+        headers,
         body: formData,
       });
 
       if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || 'Failed to parse facility document');
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || err.message || `Failed to parse facility document (HTTP ${res.status})`);
       }
 
       const data = await res.json();
@@ -78,6 +111,25 @@ export default function FacilityImportModal({
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      scanFile(e.target.files[0]);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      scanFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleScanAndPreview = async () => {
+    if (!file) return;
+    await scanFile(file);
+  };
+
   const handleCommit = async () => {
     if (!preview || !preview.sessionId) return;
     setCommitting(true);
@@ -87,13 +139,13 @@ export default function FacilityImportModal({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...getHeaders(),
+          ...resolveHeaders(),
         },
         body: JSON.stringify({ session_id: preview.sessionId }),
       });
 
       if (!res.ok) {
-        const err = await res.json();
+        const err = await res.json().catch(() => ({}));
         throw new Error(err.error || 'Failed to commit verified configuration');
       }
 
@@ -169,17 +221,28 @@ export default function FacilityImportModal({
                 <button
                   type="button"
                   onClick={handleDownloadTemplate}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-border rounded-lg bg-card text-foreground hover:bg-muted transition-colors shadow-sm"
+                  disabled={downloading}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-border rounded-lg bg-card text-foreground hover:bg-muted transition-colors shadow-sm disabled:opacity-50"
                 >
-                  <Download className="w-3.5 h-3.5" />
-                  Download .XLSX Template
+                  <Download className={`w-3.5 h-3.5 ${downloading ? 'animate-bounce' : ''}`} />
+                  {downloading ? 'Downloading...' : 'Download .XLSX Template'}
                 </button>
               </div>
 
               {/* Upload Drag & Drop Zone */}
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="p-8 border-2 border-dashed border-border hover:border-foreground/40 rounded-xl cursor-pointer text-center bg-card hover:bg-muted/10 transition-colors"
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDragging(true);
+                }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={handleDrop}
+                className={`p-8 border-2 border-dashed rounded-xl cursor-pointer text-center transition-colors ${
+                  isDragging
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:border-foreground/40 bg-card hover:bg-muted/10'
+                }`}
               >
                 <input
                   type="file"
@@ -188,19 +251,53 @@ export default function FacilityImportModal({
                   accept=".xlsx,.xls,.csv,.docx,.doc"
                   className="hidden"
                 />
-                <div className="w-12 h-12 mx-auto rounded-full bg-muted flex items-center justify-center text-muted-foreground mb-3">
-                  <UploadCloud className="w-6 h-6" />
-                </div>
-                <p className="text-xs font-medium text-foreground">
-                  {file ? file.name : 'Click to browse or drag & drop facility workbook'}
-                </p>
-                <p className="text-[11px] text-muted-foreground mt-1">
-                  Supported formats: XLSX, XLS, CSV, DOCX. Multi-sheet workbooks automatically mapped.
-                </p>
+                {uploading ? (
+                  <>
+                    <div className="w-12 h-12 mx-auto rounded-full bg-primary/10 flex items-center justify-center text-primary mb-3">
+                      <RefreshCw className="w-6 h-6 animate-spin" />
+                    </div>
+                    <p className="text-xs font-semibold text-primary">
+                      Analyzing & parsing facility workbook...
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      Extracting facilities, production lines, and equipment schema
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-12 h-12 mx-auto rounded-full bg-muted flex items-center justify-center text-muted-foreground mb-3">
+                      <UploadCloud className="w-6 h-6" />
+                    </div>
+                    <p className="text-xs font-medium text-foreground">
+                      {file ? (
+                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                          Selected: {file.name} ({(file.size / 1024).toFixed(1)} KB)
+                        </span>
+                      ) : (
+                        'Click to browse or drag & drop facility workbook'
+                      )}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      Supported formats: XLSX, XLS, CSV. Multi-sheet workbooks automatically mapped.
+                    </p>
+                  </>
+                )}
               </div>
 
               {file && (
-                <div className="flex justify-end">
+                <div className="flex items-center justify-between pt-1">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFile(null);
+                      if (fileInputRef.current) fileInputRef.current.value = '';
+                    }}
+                    className="text-xs text-muted-foreground hover:text-destructive transition-colors"
+                  >
+                    Clear selected file
+                  </button>
+
                   <button
                     type="button"
                     onClick={handleScanAndPreview}

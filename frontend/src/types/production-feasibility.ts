@@ -305,7 +305,7 @@ export interface FacilityComparisonItem {
 export interface AIProviderConfig {
   id?: string;
   organization_id?: string;
-  provider_name: 'OPENAI' | 'ANTHROPIC' | 'GEMINI' | 'AZURE_OPENAI' | 'CUSTOM_LLM' | 'LOCAL';
+  provider_name: 'NVIDIA' | 'OPENAI' | 'ANTHROPIC' | 'GEMINI' | 'AZURE_OPENAI' | 'CUSTOM_LLM' | 'LOCAL' | 'COPILOT_PROXY';
   provider_display_name: string;
   api_endpoint?: string;
   api_key_masked?: string;
@@ -318,6 +318,18 @@ export interface AIProviderConfig {
   last_test_message?: string;
   last_test_at?: string;
   usage_count: number;
+  discovered_models?: string[];
+  verified_capabilities?: {
+    chat: boolean;
+    embeddings: boolean;
+    structuredOutput: boolean;
+    embeddingDimensions?: number;
+    testedModel?: string;
+    testedAt?: string;
+  };
+  embedding_dimensions?: number;
+  max_concurrency?: number;
+  request_timeout_seconds?: number;
 }
 
 export interface AssessmentScenario {

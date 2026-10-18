@@ -214,8 +214,17 @@ export class FacilityImportService {
    * Parses an uploaded file buffer (XLSX, XLS, or CSV) and produces a validated preview.
    */
   async parseAndPreview(fileBuffer: Buffer, fileName: string): Promise<ImportPreviewResult> {
-    const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
-    const sheetNames = workbook.SheetNames;
+    let workbook: XLSX.WorkBook;
+    try {
+      workbook = XLSX.read(fileBuffer, { type: 'buffer' });
+    } catch (err: any) {
+      throw new Error(`Unable to read document "${fileName}". Please ensure it is a valid Excel (.xlsx, .xls) or CSV workbook.`);
+    }
+
+    const sheetNames = workbook.SheetNames || [];
+    if (sheetNames.length === 0) {
+      throw new Error(`Workbook "${fileName}" contains no sheets.`);
+    }
 
     const facilities: ExtractedFacility[] = [];
     const lines: ExtractedLine[] = [];

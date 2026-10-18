@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { meetingApi } from '@/services/meeting.api';
 import type { MeetingConfiguration, MeetingTemplate } from '@/types/meeting';
 import { useNotifications } from '@/contexts/NotificationContext';
+import { ModernTimePicker } from '@/components/ui/ModernTimePicker';
 import {
   Settings,
   CheckCircle2,
@@ -533,21 +534,17 @@ export default function MeetingSettings() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div>
                 <label className="block text-muted-foreground font-medium mb-1">Quiet Hours Start</label>
-                <input
-                  type="time"
+                <ModernTimePicker
                   value={preferences?.quiet_hours_start || '22:00'}
-                  onChange={e => updatePreferences({ quiet_hours_start: e.target.value })}
-                  className="w-full px-3 py-1.5 rounded-lg border border-border bg-background text-foreground font-mono"
+                  onChange={val => updatePreferences({ quiet_hours_start: val })}
                 />
               </div>
 
               <div>
                 <label className="block text-muted-foreground font-medium mb-1">Quiet Hours End</label>
-                <input
-                  type="time"
+                <ModernTimePicker
                   value={preferences?.quiet_hours_end || '07:00'}
-                  onChange={e => updatePreferences({ quiet_hours_end: e.target.value })}
-                  className="w-full px-3 py-1.5 rounded-lg border border-border bg-background text-foreground font-mono"
+                  onChange={val => updatePreferences({ quiet_hours_end: val })}
                 />
               </div>
             </div>

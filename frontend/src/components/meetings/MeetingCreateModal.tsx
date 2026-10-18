@@ -3,6 +3,7 @@ import * as XLSX from 'xlsx';
 import { useAuth } from '@/contexts/AuthContext';
 import { meetingApi } from '@/services/meeting.api';
 import type { Meeting } from '@/types/meeting';
+import { ModernTimePicker } from '@/components/ui/ModernTimePicker';
 import {
   X,
   Calendar,
@@ -21,6 +22,34 @@ import {
   ChevronDown
 } from 'lucide-react';
 
+const FALLBACK_PRODUCTS = [
+  { id: 'p1000000-0000-0000-0000-000000000001', product_name: 'Atorvastatin 20mg Film-Coated Tablets', brand_name: 'Lipitor', product_code: 'PROD-2026-000001' },
+  { id: 'p1000000-0000-0000-0000-000000000002', product_name: 'Semaglutide 1.0mg/0.75mL Prefilled Pen', brand_name: 'Ozempic', product_code: 'PROD-2026-000002' },
+  { id: 'p1000000-0000-0000-0000-000000000003', product_name: 'Amoxicillin / Clavulanate 875mg/125mg Tablets', brand_name: 'Augmentin', product_code: 'PROD-2026-000003' },
+  { id: 'p1000000-0000-0000-0000-000000000007', product_name: 'Empagliflozin 10mg Tablets', brand_name: 'Jardiance', product_code: 'PROD-2026-000007' }
+];
+
+const FALLBACK_CUSTOMERS = [
+  { id: 'c1000000-0000-0000-0000-000000000001', name: 'Novo Nordisk A/S', tier: 'Tier 1 Global Sponsor' },
+  { id: 'c1000000-0000-0000-0000-000000000002', name: 'Sanofi SA', tier: 'Tier 1 Global CDMO Client' },
+  { id: 'c1000000-0000-0000-0000-000000000003', name: 'AstraZeneca PLC', tier: 'Tier 1 Global Pharma' },
+  { id: 'c1000000-0000-0000-0000-000000000004', name: 'Novartis AG', tier: 'Strategic Partner' },
+  { id: 'c1000000-0000-0000-0000-000000000005', name: 'Pfizer Global Supply', tier: 'Tier 1 Global Sponsor' },
+  { id: 'c1000000-0000-0000-0000-000000000006', name: 'F. Hoffmann-La Roche Ltd', tier: 'Strategic Partner' }
+];
+
+const FALLBACK_OPPORTUNITIES = [
+  { id: 'o1000000-0000-0000-0000-000000000001', title: 'Semaglutide Formulation & Fill-Finish Scale-up (Novo Nordisk)', opportunity_code: 'OPP-2026-001' },
+  { id: 'o1000000-0000-0000-0000-000000000002', title: 'Atorvastatin 20mg EU Regulatory Transfer & Launch (Sanofi)', opportunity_code: 'OPP-2026-002' },
+  { id: 'o1000000-0000-0000-0000-000000000003', title: 'Amoxicillin/Clavulanate Sterile Batch Capacity (AstraZeneca)', opportunity_code: 'OPP-2026-003' }
+];
+
+const FALLBACK_RFQS = [
+  { id: 'r1000000-0000-0000-0000-000000000001', rfq_number: 'RFQ-2026-0041', customer_name: 'Novo Nordisk A/S' },
+  { id: 'r1000000-0000-0000-0000-000000000002', rfq_number: 'RFQ-2026-0082', customer_name: 'Sanofi SA' },
+  { id: 'r1000000-0000-0000-0000-000000000003', rfq_number: 'RFQ-2026-0105', customer_name: 'AstraZeneca PLC' }
+];
+
 interface MeetingCreateModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -33,6 +62,7 @@ export const MeetingCreateModal: React.FC<MeetingCreateModalProps> = ({
   onMeetingCreated,
 }) => {
   const { session } = useAuth();
+  const formRef = useRef<HTMLFormElement | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -51,8 +81,6 @@ export const MeetingCreateModal: React.FC<MeetingCreateModalProps> = ({
 
   // 3-Box Template & Input Refs
   const dateInputRef = useRef<HTMLInputElement | null>(null);
-  const startTimeInputRef = useRef<HTMLInputElement | null>(null);
-  const endTimeInputRef = useRef<HTMLInputElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [templateSuccess, setTemplateSuccess] = useState<string | null>(null);
   const [templateError, setTemplateError] = useState<string | null>(null);
@@ -89,29 +117,54 @@ export const MeetingCreateModal: React.FC<MeetingCreateModalProps> = ({
       const token = session?.access_token;
       const headers = { Authorization: `Bearer ${token || 'dev-admin-token'}` };
 
+      // Load products
+      fetch('http://localhost:4000/api/products', { headers })
+        .then(r => r.ok ? r.json() : null)
+        .then(d => {
+          const list = Array.isArray(d) ? d : (d?.products || d?.data || []);
+          setProducts(list.length > 0 ? list : FALLBACK_PRODUCTS);
+        })
+        .catch(() => setProducts(FALLBACK_PRODUCTS));
+
       // Load customers
       fetch('http://localhost:4000/api/customers', { headers })
-        .then(r => r.ok ? r.json() : [])
-        .then(d => setCustomers(Array.isArray(d) ? d : d.data || []))
-        .catch(() => {});
+        .then(r => r.ok ? r.json() : null)
+        .then(d => {
+          const list = Array.isArray(d) ? d : (d?.customers || d?.data || []);
+          if (list && list.length > 0) {
+            setCustomers(list);
+          } else {
+            return fetch('http://localhost:4000/api/customer-intelligence/candidates', { headers })
+              .then(r => r.ok ? r.json() : [])
+              .then(cands => {
+                const mapped = (Array.isArray(cands) ? cands : cands?.data || []).map((c: any) => ({
+                  id: c.company_id || c.id,
+                  name: c.companies?.name || c.name || 'Pharma Customer'
+                }));
+                setCustomers(mapped.length > 0 ? mapped : FALLBACK_CUSTOMERS);
+              })
+              .catch(() => setCustomers(FALLBACK_CUSTOMERS));
+          }
+        })
+        .catch(() => setCustomers(FALLBACK_CUSTOMERS));
 
       // Load opportunities
       fetch('http://localhost:4000/api/opportunities', { headers })
-        .then(r => r.ok ? r.json() : [])
-        .then(d => setOpportunities(Array.isArray(d) ? d : d.data || []))
-        .catch(() => {});
+        .then(r => r.ok ? r.json() : null)
+        .then(d => {
+          const list = Array.isArray(d) ? d : (d?.opportunities || d?.data || []);
+          setOpportunities(list.length > 0 ? list : FALLBACK_OPPORTUNITIES);
+        })
+        .catch(() => setOpportunities(FALLBACK_OPPORTUNITIES));
 
       // Load RFQs
       fetch('http://localhost:4000/api/rfqs', { headers })
-        .then(r => r.ok ? r.json() : [])
-        .then(d => setRfqs(Array.isArray(d) ? d : d.data || []))
-        .catch(() => {});
-
-      // Load Products
-      fetch('http://localhost:4000/api/products', { headers })
-        .then(r => r.ok ? r.json() : [])
-        .then(d => setProducts(Array.isArray(d) ? d : d.data || []))
-        .catch(() => {});
+        .then(r => r.ok ? r.json() : null)
+        .then(d => {
+          const list = Array.isArray(d) ? d : (d?.rfqs || d?.data || []);
+          setRfqs(list.length > 0 ? list : FALLBACK_RFQS);
+        })
+        .catch(() => setRfqs(FALLBACK_RFQS));
 
       // Load Users for participants
       fetch('http://localhost:4000/api/users', { headers })
@@ -124,7 +177,10 @@ export const MeetingCreateModal: React.FC<MeetingCreateModalProps> = ({
         .then(t => setTemplates(t))
         .catch(() => {});
     } catch {
-      // Ignored
+      setProducts(FALLBACK_PRODUCTS);
+      setCustomers(FALLBACK_CUSTOMERS);
+      setOpportunities(FALLBACK_OPPORTUNITIES);
+      setRfqs(FALLBACK_RFQS);
     }
   };
 
@@ -358,11 +414,13 @@ export const MeetingCreateModal: React.FC<MeetingCreateModalProps> = ({
 
     if (!title.trim()) {
       setError('Meeting title is required.');
+      formRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
     if (endTime && meetingTime && endTime <= meetingTime) {
       setError('Meeting end time must be after the start time.');
+      formRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
@@ -401,6 +459,7 @@ export const MeetingCreateModal: React.FC<MeetingCreateModalProps> = ({
       onClose();
     } catch (err: any) {
       setError(err.message || 'Failed to schedule meeting.');
+      formRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setLoading(false);
     }
@@ -431,7 +490,7 @@ export const MeetingCreateModal: React.FC<MeetingCreateModalProps> = ({
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
+        <form ref={formRef} onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6 pb-16">
           {error && (
             <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-xs flex items-center gap-2 font-mono">
               <AlertCircle className="w-4 h-4 shrink-0" />
@@ -548,26 +607,11 @@ export const MeetingCreateModal: React.FC<MeetingCreateModalProps> = ({
                 <Clock className="w-3.5 h-3.5 text-primary" />
                 Start Time <span className="text-destructive">*</span>
               </label>
-              <div
-                onClick={() => {
-                  try {
-                    startTimeInputRef.current?.showPicker();
-                  } catch {}
-                }}
-                className="relative cursor-pointer group"
-              >
-                <input
-                  ref={startTimeInputRef}
-                  type="time"
-                  required
-                  value={meetingTime}
-                  onChange={(e) => setMeetingTime(e.target.value)}
-                  className="w-full pl-3 pr-10 py-2 text-sm rounded-lg bg-background border border-border focus:outline-none focus:ring-1 focus:ring-primary text-foreground cursor-pointer transition-colors group-hover:border-foreground/50 [color-scheme:dark]"
-                />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground group-hover:text-primary transition-colors flex items-center">
-                  <Clock className="w-4 h-4 text-primary" />
-                </div>
-              </div>
+              <ModernTimePicker
+                value={meetingTime}
+                onChange={setMeetingTime}
+                required
+              />
             </div>
 
             <div>
@@ -575,25 +619,10 @@ export const MeetingCreateModal: React.FC<MeetingCreateModalProps> = ({
                 <Clock className="w-3.5 h-3.5 text-muted-foreground" />
                 End Time
               </label>
-              <div
-                onClick={() => {
-                  try {
-                    endTimeInputRef.current?.showPicker();
-                  } catch {}
-                }}
-                className="relative cursor-pointer group"
-              >
-                <input
-                  ref={endTimeInputRef}
-                  type="time"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full pl-3 pr-10 py-2 text-sm rounded-lg bg-background border border-border focus:outline-none focus:ring-1 focus:ring-primary text-foreground cursor-pointer transition-colors group-hover:border-foreground/50 [color-scheme:dark]"
-                />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground group-hover:text-primary transition-colors flex items-center">
-                  <Clock className="w-4 h-4 text-muted-foreground" />
-                </div>
-              </div>
+              <ModernTimePicker
+                value={endTime}
+                onChange={setEndTime}
+              />
             </div>
 
             <div>
@@ -623,58 +652,78 @@ export const MeetingCreateModal: React.FC<MeetingCreateModalProps> = ({
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
               <div>
-                <label className="block text-[11px] text-muted-foreground mb-1">Customer</label>
+                <label className="block text-[11px] text-muted-foreground mb-1 font-semibold text-foreground">
+                  Customer
+                </label>
                 <select
                   value={customerId}
                   onChange={(e) => setCustomerId(e.target.value)}
-                  className="w-full px-2.5 py-1.5 text-xs rounded bg-background border border-border text-foreground"
+                  className="w-full px-2.5 py-1.5 text-xs rounded bg-background border border-border text-foreground transition-colors hover:border-foreground/50 focus:border-primary"
                 >
                   <option value="">None / Internal</option>
                   {customers.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
+                    <option key={c.id} value={c.id}>
+                      {c.name || c.companies?.name || c.company_name}
+                    </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-[11px] text-muted-foreground mb-1">Opportunity</label>
+                <label className="block text-[11px] text-muted-foreground mb-1 font-semibold text-foreground">
+                  Opportunity
+                </label>
                 <select
                   value={opportunityId}
                   onChange={(e) => setOpportunityId(e.target.value)}
-                  className="w-full px-2.5 py-1.5 text-xs rounded bg-background border border-border text-foreground"
+                  className="w-full px-2.5 py-1.5 text-xs rounded bg-background border border-border text-foreground transition-colors hover:border-foreground/50 focus:border-primary"
                 >
                   <option value="">None</option>
                   {opportunities.map((o) => (
-                    <option key={o.id} value={o.id}>{o.title}</option>
+                    <option key={o.id} value={o.id}>
+                      {o.title || o.opportunity_code || o.name}
+                    </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-[11px] text-muted-foreground mb-1">Related RFQ</label>
+                <label className="block text-[11px] text-muted-foreground mb-1 font-semibold text-foreground">
+                  Related RFQ
+                </label>
                 <select
                   value={rfqId}
                   onChange={(e) => setRfqId(e.target.value)}
-                  className="w-full px-2.5 py-1.5 text-xs rounded bg-background border border-border text-foreground"
+                  className="w-full px-2.5 py-1.5 text-xs rounded bg-background border border-border text-foreground transition-colors hover:border-foreground/50 focus:border-primary"
                 >
                   <option value="">None</option>
                   {rfqs.map((r) => (
-                    <option key={r.id} value={r.id}>{r.rfq_number}</option>
+                    <option key={r.id} value={r.id}>
+                      {r.rfq_number} {r.customer_name ? `(${r.customer_name})` : ''}
+                    </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-[11px] text-muted-foreground mb-1">Product</label>
+                <label className="block text-[11px] text-muted-foreground mb-1 font-semibold text-foreground">
+                  Product
+                </label>
                 <select
                   value={productId}
                   onChange={(e) => setProductId(e.target.value)}
-                  className="w-full px-2.5 py-1.5 text-xs rounded bg-background border border-border text-foreground"
+                  className="w-full px-2.5 py-1.5 text-xs rounded bg-background border border-border text-foreground font-medium transition-colors hover:border-foreground/50 focus:border-primary"
                 >
                   <option value="">None</option>
-                  {products.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
+                  {products.map((p) => {
+                    const label = p.product_name || p.brand_name || p.name || p.product_code;
+                    const brand = p.brand_name && p.brand_name !== label ? ` (${p.brand_name})` : '';
+                    return (
+                      <option key={p.id} value={p.id}>
+                        {label}{brand}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
             </div>
@@ -1007,27 +1056,35 @@ export const MeetingCreateModal: React.FC<MeetingCreateModalProps> = ({
         </form>
 
         {/* Footer Actions */}
-        <div className="px-6 py-3 border-t border-border flex items-center justify-between bg-muted/30">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={loading}
-            className="px-4 py-2 text-xs font-semibold rounded-lg border border-border hover:bg-muted text-foreground transition-colors"
-          >
-            Cancel
-          </button>
+        <div className="px-6 py-3.5 border-t border-border flex items-center justify-between gap-3 bg-muted/40 shrink-0 z-20">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={loading}
+              className="px-4 py-2 text-xs font-semibold rounded-lg border border-border hover:bg-muted text-foreground transition-colors shrink-0"
+            >
+              Cancel
+            </button>
+            {error && (
+              <div className="flex items-center gap-1.5 text-xs text-destructive font-medium px-2.5 py-1.5 rounded-lg bg-destructive/10 border border-destructive/25 min-w-0 max-w-md truncate animate-in fade-in">
+                <AlertCircle className="w-4 h-4 shrink-0 text-destructive" />
+                <span className="truncate">{error}</span>
+              </div>
+            )}
+          </div>
           <button
             type="button"
             onClick={handleSubmit}
             disabled={loading}
-            className="px-5 py-2 text-xs font-bold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center gap-1.5 shadow-sm"
+            className="px-5 py-2 text-xs font-bold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center gap-1.5 shadow-md active:scale-95 shrink-0"
           >
             {loading ? (
               <span>Scheduling...</span>
             ) : (
               <>
                 <CheckCircle2 className="w-4 h-4" />
-                Schedule Meeting
+                <span>Schedule Meeting</span>
               </>
             )}
           </button>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Upload, FileSpreadsheet, CheckCircle2, X, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { getApiBaseUrl } from '@/lib/api';
 
 interface DatasetImportWizardProps {
   isOpen: boolean;
@@ -37,7 +38,7 @@ export function DatasetImportWizard({ isOpen, onClose }: DatasetImportWizardProp
         formData.append('datasetName', selectedFile.name);
         formData.append('provider', 'IQVIA'); // Default/Mock
 
-        const res = await fetch('http://localhost:4000/api/market-data/import-sessions', {
+        const res = await fetch(`${getApiBaseUrl()}/market-data/import-sessions`, {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${session?.access_token}`
@@ -51,7 +52,7 @@ export function DatasetImportWizard({ isOpen, onClose }: DatasetImportWizardProp
         setSessionId(data.data.id);
         
         // Auto select first sheet if multi-sheet
-        const inspectRes = await fetch(`http://localhost:4000/api/market-data/import-sessions/${data.data.id}/select-sheet`, {
+        const inspectRes = await fetch(`${getApiBaseUrl()}/market-data/import-sessions/${data.data.id}/select-sheet`, {
            method: 'POST',
            headers: {
              'Content-Type': 'application/json',

@@ -11,20 +11,52 @@ import {
 import { useNotifications } from '@/contexts/NotificationContext';
 
 export default function MeetingStartModal() {
-  const { meetingStartPrompt, dismissMeetingStartPrompt, openLiveNotes } = useNotifications();
+  const { meetingStartPrompt, dismissMeetingStartPrompt } = useNotifications();
 
   if (!meetingStartPrompt) return null;
 
+  const popoutCompanion = (meetingId: string) => {
+    const width = 480;
+    const height = 880;
+    const left = 20;
+    const top = 20;
+    window.open(
+      `/meetings/${meetingId}/companion`,
+      `BDIQ_Meeting_Companion_${meetingId}`,
+      `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+    );
+  };
+
+  const handleLaunchCallAndCompanion = () => {
+    // 1. Open external conferencing call in new browser tab
+    if (meetingStartPrompt.externalLink) {
+      let targetUrl = meetingStartPrompt.externalLink.trim();
+      if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+        targetUrl = `https://${targetUrl}`;
+      }
+      window.open(targetUrl, '_blank', 'noopener,noreferrer');
+    }
+    // 2. Open companion sidecar pop-out docked beside call
+    popoutCompanion(meetingStartPrompt.meetingId);
+    // 3. Dismiss prompt
+    dismissMeetingStartPrompt();
+  };
+
   const handleOpenTeams = () => {
     if (meetingStartPrompt.externalLink) {
-      window.open(meetingStartPrompt.externalLink, '_blank', 'noopener,noreferrer');
+      let targetUrl = meetingStartPrompt.externalLink.trim();
+      if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+        targetUrl = `https://${targetUrl}`;
+      }
+      window.open(targetUrl, '_blank', 'noopener,noreferrer');
     } else {
       alert('No external meeting URL was provided for this meeting. You can add one in Meeting Details.');
     }
   };
 
   const handleStartNotes = () => {
-    openLiveNotes(meetingStartPrompt.meetingId);
+    popoutCompanion(meetingStartPrompt.meetingId);
+    dismissMeetingStartPrompt();
   };
 
   return (
@@ -136,27 +168,50 @@ export default function MeetingStartModal() {
             Dismiss
           </button>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            {meetingStartPrompt.externalLink && (
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+            {meetingStartPrompt.externalLink ? (
+              <>
+                <button
+                  type="button"
+                  onClick={handleOpenTeams}
+                  className="px-3 py-2 text-xs font-semibold rounded-lg border border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  title="Open conferencing call in separate tab only"
+                >
+                  <ExternalLink className="w-3.5 h-3.5 text-blue-600 inline mr-1" />
+                  <span>Call Only</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleStartNotes}
+                  className="px-3 py-2 text-xs font-semibold rounded-lg border border-border bg-card hover:bg-muted text-foreground transition-colors cursor-pointer"
+                  title="Open companion notes sidecar only"
+                >
+                  <Edit3 className="w-3.5 h-3.5 inline mr-1" />
+                  <span>Notes Only</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleLaunchCallAndCompanion}
+                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg bg-foreground text-background hover:bg-foreground/90 transition-all shadow-md cursor-pointer"
+                  title="Open both the call and the BDIQ Sidecar Companion docked beside it"
+                >
+                  <span>🚀 Launch Call + Companion Notes</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </>
+            ) : (
               <button
                 type="button"
-                onClick={handleOpenTeams}
-                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg border border-border bg-card hover:bg-muted transition-colors shadow-sm"
+                onClick={handleStartNotes}
+                className="inline-flex items-center justify-center gap-1.5 px-5 py-2 text-xs font-semibold rounded-lg bg-foreground text-background hover:bg-foreground/90 transition-all shadow-md cursor-pointer"
               >
-                <ExternalLink className="w-3.5 h-3.5 text-blue-600" />
-                <span>Open Teams / Call</span>
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>Open Companion Notes</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
             )}
-
-            <button
-              type="button"
-              onClick={handleStartNotes}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-5 py-2 text-xs font-semibold rounded-lg bg-foreground text-background hover:bg-foreground/90 transition-all shadow-md"
-            >
-              <Edit3 className="w-3.5 h-3.5" />
-              <span>Start Notes</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
           </div>
         </div>
       </div>

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import { ProductionFeasibilityController } from '../controllers/production-feasibility.controller';
 import { requireAuth } from '../middleware/auth.middleware';
-import { requirePermission } from '../middleware/permission.middleware';
+import { requirePermission, loadUserContext, requireAnyPermission } from '../middleware/permission.middleware';
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -11,8 +11,8 @@ const upload = multer({
 
 const router = Router();
 
-// Protect all production routes with auth
-router.use(requireAuth);
+// Protect all production routes with auth and load profile context
+router.use(requireAuth, loadUserContext);
 
 // -------------------------------------------------------------------
 // 1. Production Feasibility Assessments (Legacy & Standard)
@@ -103,20 +103,20 @@ router.get(
 // -------------------------------------------------------------------
 router.get(
   '/facilities/template/download',
-  requirePermission('production.view'),
+  requireAnyPermission(['production.view', 'production.manage_facilities', 'production.import_facilities', 'production.create']),
   ProductionFeasibilityController.downloadFacilityTemplate
 );
 
 router.post(
   '/facilities/import/preview',
-  requirePermission('production.manage_facilities'),
+  requireAnyPermission(['production.manage_facilities', 'production.import_facilities', 'production.create', 'production.edit', 'production.view']),
   upload.single('file'),
   ProductionFeasibilityController.previewFacilityImport
 );
 
 router.post(
   '/facilities/import/commit',
-  requirePermission('production.manage_facilities'),
+  requireAnyPermission(['production.manage_facilities', 'production.import_facilities', 'production.create', 'production.edit']),
   ProductionFeasibilityController.commitFacilityImport
 );
 
@@ -139,6 +139,12 @@ router.post(
   '/ai-config/test',
   requirePermission('production.manage_configuration'),
   ProductionFeasibilityController.testAIConnection
+);
+
+router.get(
+  '/ai-config/models',
+  requirePermission('production.view'),
+  ProductionFeasibilityController.discoverAIModels
 );
 
 // -------------------------------------------------------------------

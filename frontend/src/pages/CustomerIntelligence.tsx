@@ -7,17 +7,18 @@ import {
   Filter,
   Download,
   Upload,
-  Star,
   Target,
   CheckCircle,
   BarChart2,
-  Activity,
   MapPin,
   RefreshCw,
   AlertCircle,
   X,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Eye
 } from 'lucide-react';
+import { ConnectorsHealthBanner } from '../components/customer-intelligence/ConnectorsHealthBanner';
+import { CustomerProfileDrawer } from '../components/customer-intelligence/CustomerProfileDrawer';
 
 interface Candidate {
   id: string;
@@ -26,13 +27,22 @@ interface Candidate {
   subject_id: string;
   customer_type?: string;
   candidate_status: string;
+  intent_status?: string;
+  intent_evidence_summary?: string;
   fit_score: number;
   fit_level: string;
+  completeness_score?: number;
+  discovery_source?: string;
+  source_origin_type?: string;
   reason?: string;
   companies?: {
+    id?: string;
     name: string;
+    legal_name?: string;
+    headquarters?: string;
     company_type?: string;
     website?: string;
+    relationship_with_axxelent?: string;
   };
   countries?: {
     name: string;
@@ -69,6 +79,9 @@ export default function CustomerIntelligence() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [showImportModal, setShowImportModal] = useState(false);
   const [availableMolecules, setAvailableMolecules] = useState<any[]>(DEFAULT_MOLECULES);
+
+  // Traceable profile drawer state
+  const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchMolecules();
@@ -186,14 +199,16 @@ export default function CustomerIntelligence() {
       alert('No customer candidates currently available to export.');
       return;
     }
-    const headers = ['Company', 'Country', 'Subject Type', 'Fit Score', 'Fit Level', 'Status', 'Evidence Reason'];
+    const headers = ['Company', 'Country', 'Subject Type', 'Fit Score', 'Fit Level', 'Intent Status', 'Completeness', 'Source Origin', 'Evidence Reason'];
     const rows = candidates.map(c => [
       `"${c.companies?.name || 'Target Account'}"`,
       `"${c.countries?.name || 'Global'}"`,
       c.subject_type || 'MOLECULE',
       c.fit_score ?? 0,
       c.fit_level || 'N/A',
-      c.candidate_status || 'DISCOVERED',
+      c.intent_status || 'NO_VERIFIED_INTENT',
+      `${c.completeness_score ?? 0}%`,
+      c.source_origin_type || 'INTERNAL',
       `"${(c.reason || '').replace(/"/g, '""')}"`
     ]);
     const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
@@ -220,6 +235,7 @@ export default function CustomerIntelligence() {
   const filteredCandidates = candidates.filter(c => {
     if (statusFilter === 'ALL') return true;
     if (statusFilter === 'HIGH_FIT') return c.fit_level === 'HIGH';
+    if (statusFilter === 'VERIFIED_INTENT') return c.intent_status && c.intent_status !== 'NO_VERIFIED_INTENT';
     return c.candidate_status === statusFilter;
   });
 
@@ -230,10 +246,10 @@ export default function CustomerIntelligence() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2.5">
             <Globe className="h-6 w-6 text-primary" />
-            Global Customer Intelligence
+            Customer Intelligence & Proof Architecture
           </h1>
           <p className="text-xs text-muted-foreground mt-1">
-            Discover and qualify evidence-backed pharmaceutical customer accounts globally.
+            Traceable pharmaceutical discovery engine. Every claim is verified against official regulatory filings and corporate disclosures.
           </p>
         </div>
         <div className="flex items-center gap-2.5">
@@ -248,105 +264,62 @@ export default function CustomerIntelligence() {
           )}
           <button
             onClick={handleExport}
-            className="flex items-center px-3.5 py-2 bg-card border border-border text-foreground rounded-lg hover:bg-muted font-medium text-xs shadow-xs transition-colors"
+            className="flex items-center px-3.5 py-2 bg-card border border-border text-foreground hover:bg-muted font-medium text-xs rounded-lg shadow-xs transition-colors"
           >
             <Download className="h-3.5 w-3.5 mr-1.5" />
-            Export
+            Export Intelligence (CSV)
           </button>
         </div>
       </div>
 
-      {/* KPI Ribbon */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          {
-            name: 'Potential Customers',
-            stat: candidates.length,
-            icon: Target,
-            color: 'text-blue-400',
-            bg: 'bg-blue-500/10 border-blue-500/20'
-          },
-          {
-            name: 'Qualified Leads',
-            stat: candidates.filter(c => c.candidate_status === 'QUALIFIED').length,
-            icon: CheckCircle,
-            color: 'text-emerald-400',
-            bg: 'bg-emerald-500/10 border-emerald-500/20'
-          },
-          {
-            name: 'High Fit Matches',
-            stat: candidates.filter(c => c.fit_level === 'HIGH').length,
-            icon: Star,
-            color: 'text-amber-400',
-            bg: 'bg-amber-500/10 border-amber-500/20'
-          },
-          {
-            name: 'Data Sources Connected',
-            stat: 3,
-            icon: Activity,
-            color: 'text-purple-400',
-            bg: 'bg-purple-500/10 border-purple-500/20'
-          },
-        ].map((item) => (
-          <div
-            key={item.name}
-            className="bg-card p-4 rounded-xl shadow-xs border border-border hover:border-primary/40 transition-colors"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono uppercase font-bold text-muted-foreground tracking-wider">
-                {item.name}
-              </span>
-              <div className={`p-1.5 rounded-lg border ${item.bg}`}>
-                <item.icon className={`h-4 w-4 ${item.color}`} />
-              </div>
-            </div>
-            <p className="text-2xl font-black text-foreground mt-2">
-              {item.stat}
-            </p>
-          </div>
-        ))}
-      </div>
+      {/* Connectors Health Banner (Phase 10) */}
+      <ConnectorsHealthBanner sessionToken={session?.access_token} />
 
-      {/* Discovery Engine Box */}
-      <div className="bg-card rounded-xl shadow-xs border border-border overflow-hidden">
-        <div className="p-4 border-b border-border bg-muted/20 flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <Search className="h-4 w-4 text-primary" />
-              Customer Discovery Engine
-            </h3>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Search authorized datasets to identify evidence-backed potential customers.
-            </p>
+      {/* Discovery Criteria Panel */}
+      <div className="bg-card rounded-xl p-5 shadow-xs border border-border space-y-4">
+        <div className="flex items-center justify-between border-b border-border pb-3">
+          <div className="flex items-center gap-2">
+            <Target className="h-4 w-4 text-primary" />
+            <h2 className="text-sm font-semibold text-foreground">Customer Discovery Engine</h2>
           </div>
+          <span className="text-[11px] font-mono text-muted-foreground">
+            Algorithm: Deterministic 6-Dimension Fit & Intent Separation
+          </span>
         </div>
 
-        <div className="p-4 grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
           <div className="md:col-span-1">
-            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
-              Analysis Type
+            <label className="block text-xs font-medium text-foreground mb-1.5">
+              Discovery Scope
             </label>
             <select
               value={subjectType}
-              onChange={(e) => setSubjectType(e.target.value)}
-              className="w-full bg-background border border-border rounded-lg py-2 px-3 text-xs text-foreground focus:ring-1 focus:ring-primary focus:outline-none transition-colors"
+              onChange={(e) => {
+                setSubjectType(e.target.value);
+                setSubjectId('');
+              }}
+              className="w-full bg-background border border-border rounded-lg text-xs py-2 px-3 text-foreground focus:outline-none focus:ring-1 focus:ring-primary transition-colors"
             >
-              <option value="MOLECULE">Molecule (Canonical)</option>
-              <option value="PRODUCT">Specific Product</option>
+              <option value="MOLECULE">Target Molecule (Active Ingredient)</option>
+              <option value="PRODUCT">Commercial Product (Finished Dose)</option>
             </select>
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
-              Subject (Molecule/Product)
+            <label className="block text-xs font-medium text-foreground mb-1.5">
+              Select Reference Substance
             </label>
             <select
               value={subjectId}
               onChange={(e) => {
                 setSubjectId(e.target.value);
-                if (e.target.value) fetchCandidates(e.target.value);
+                if (e.target.value) {
+                  fetchCandidates(e.target.value);
+                } else {
+                  fetchCandidates();
+                }
               }}
-              className="w-full bg-background border border-border rounded-lg py-2 px-3 text-xs text-foreground focus:ring-1 focus:ring-primary focus:outline-none transition-colors"
+              className="w-full bg-background border border-border rounded-lg text-xs py-2 px-3 text-foreground focus:outline-none focus:ring-1 focus:ring-primary transition-colors font-medium"
             >
               <option value="">Select a subject...</option>
               {availableMolecules.map((m) => (
@@ -379,7 +352,7 @@ export default function CustomerIntelligence() {
         </div>
 
         {error && (
-          <div className="px-4 pb-4">
+          <div className="px-1 pt-1">
             <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-xs">
               <AlertCircle className="h-4 w-4 shrink-0" />
               <span>{error}</span>
@@ -388,7 +361,7 @@ export default function CustomerIntelligence() {
         )}
 
         {successMsg && (
-          <div className="px-4 pb-4">
+          <div className="px-1 pt-1">
             <div className="flex items-center gap-2 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-xs">
               <CheckCircle className="h-4 w-4 shrink-0" />
               <span>{successMsg}</span>
@@ -400,10 +373,16 @@ export default function CustomerIntelligence() {
       {/* Customer Candidates List */}
       <div className="bg-card rounded-xl shadow-xs border border-border overflow-hidden">
         <div className="px-4 py-3 border-b border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 bg-muted/20">
-          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <BarChart2 className="h-4 w-4 text-primary" />
-            Customer Candidates
-          </h3>
+          <div>
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <BarChart2 className="h-4 w-4 text-primary" />
+              Traceable Customer Candidates ({filteredCandidates.length})
+            </h3>
+            <span className="text-[11px] text-muted-foreground">
+              Click any company row to open full proof profile, source citations, score calculation, and CDMO evaluation.
+            </span>
+          </div>
+
           <div className="flex items-center gap-2">
             <Filter className="h-3.5 w-3.5 text-muted-foreground" />
             <select
@@ -413,6 +392,7 @@ export default function CustomerIntelligence() {
             >
               <option value="ALL">All Candidates</option>
               <option value="HIGH_FIT">High Fit Only</option>
+              <option value="VERIFIED_INTENT">Verified Intent Signals Only</option>
               <option value="QUALIFIED">Qualified</option>
               <option value="SHORTLISTED">Shortlisted</option>
               <option value="DISCOVERED">Discovered</option>
@@ -425,77 +405,143 @@ export default function CustomerIntelligence() {
             <table className="min-w-full divide-y divide-border text-xs">
               <thead className="bg-muted/40">
                 <tr>
-                  <th className="px-4 py-3 text-left font-mono text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Company</th>
-                  <th className="px-4 py-3 text-left font-mono text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Fit Score</th>
-                  <th className="px-4 py-3 text-left font-mono text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Status</th>
-                  <th className="px-4 py-3 text-left font-mono text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Primary Evidence</th>
+                  <th className="px-4 py-3 text-left font-mono text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Company & Origin</th>
+                  <th className="px-4 py-3 text-left font-mono text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Deterministic Fit</th>
+                  <th className="px-4 py-3 text-left font-mono text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Customer Intent</th>
+                  <th className="px-4 py-3 text-left font-mono text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Primary Evidence & Proof</th>
                   <th className="px-4 py-3 text-right font-mono text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-card divide-y divide-border">
-                {filteredCandidates.map((c) => (
-                  <tr key={c.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 shrink-0 flex items-center justify-center rounded-lg bg-primary/10 text-primary font-bold text-xs border border-primary/20">
-                          {c.companies?.name?.substring(0, 2).toUpperCase() || 'CO'}
-                        </div>
-                        <div>
-                          <div className="font-semibold text-foreground">{c.companies?.name || 'Target Account'}</div>
-                          <div className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
-                            <MapPin className="h-3 w-3" />
-                            {c.countries?.name || 'Global Market'}
+                {filteredCandidates.map((c) => {
+                  const isDemo = c.source_origin_type === 'DEMONSTRATION_FIXTURE';
+                  const isVerifiedOrigin = c.source_origin_type === 'VERIFIED_EXTERNAL_RECORD';
+
+                  return (
+                    <tr 
+                      key={c.id} 
+                      onClick={() => setSelectedCandidateId(c.id)}
+                      className="hover:bg-muted/40 cursor-pointer transition-colors group"
+                    >
+                      {/* Company & Origin */}
+                      <td className="px-4 py-3.5 whitespace-nowrap">
+                        <div className="flex items-center gap-3">
+                          <div className="h-9 w-9 shrink-0 flex items-center justify-center rounded-lg bg-primary/10 text-primary font-bold text-xs border border-primary/20 group-hover:bg-primary/20 transition-colors">
+                            {c.companies?.name?.substring(0, 2).toUpperCase() || 'CO'}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-bold text-foreground text-sm group-hover:text-primary transition-colors">
+                                {c.companies?.name || 'Target Account'}
+                              </span>
+                              {isDemo ? (
+                                <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-mono font-bold uppercase bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                  Demo Fixture
+                                </span>
+                              ) : isVerifiedOrigin ? (
+                                <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-mono font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                  Verified
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-mono font-bold uppercase bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                  BDIQ Vault
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[11px] text-muted-foreground flex items-center gap-2 mt-0.5">
+                              <span className="flex items-center gap-1">
+                                <MapPin className="h-3 w-3" />
+                                {c.countries?.name || 'Global Market'}
+                              </span>
+                              <span>•</span>
+                              <span className="font-mono text-[10px]">ID: {c.company_id.substring(0, 8)}...</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-foreground">{c.fit_score}/100</span>
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase border ${
-                          c.fit_level === 'HIGH' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                          c.fit_level === 'MEDIUM' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                          'bg-muted text-muted-foreground border-border'
-                        }`}>
-                          {c.fit_level}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase border ${
-                        c.candidate_status === 'QUALIFIED' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
-                        c.candidate_status === 'SHORTLISTED' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' :
-                        c.candidate_status === 'DISQUALIFIED' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                        'bg-zinc-500/10 text-zinc-400 border-zinc-500/20'
-                      }`}>
-                        {c.candidate_status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="text-muted-foreground max-w-md truncate" title={c.reason}>
-                        {c.reason || 'Evidence derived from discovery engine and market observations'}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          onClick={() => handleUpdateStatus(c.id, 'QUALIFIED')}
-                          title="Qualify Lead"
-                          className="px-2 py-1 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 text-[11px] font-medium transition-colors"
-                        >
-                          Qualify
-                        </button>
-                        <button
-                          onClick={() => handleUpdateStatus(c.id, 'SHORTLISTED')}
-                          title="Shortlist Lead"
-                          className="px-2 py-1 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 text-[11px] font-medium transition-colors"
-                        >
-                          Shortlist
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+
+                      {/* Deterministic Fit Score */}
+                      <td className="px-4 py-3.5 whitespace-nowrap">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold text-foreground text-sm">{c.fit_score}/100</span>
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase border ${
+                              c.fit_level === 'HIGH' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                              c.fit_level === 'MEDIUM' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                              'bg-muted text-muted-foreground border-border'
+                            }`}>
+                              {c.fit_level}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-mono">
+                            <span>Proof Completeness:</span>
+                            <strong className="text-foreground">{c.completeness_score ?? 60}%</strong>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Customer Intent Status (Phase 7 Separation) */}
+                      <td className="px-4 py-3.5 whitespace-nowrap">
+                        <div className="space-y-1">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase border ${
+                            c.intent_status === 'VERIFIED_RFQ_RECEIVED' || c.intent_status === 'CONTRACT_AWARD_CONFIRMED' 
+                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                            c.intent_status === 'PUBLIC_SOURCING_SIGNAL' || c.intent_status === 'INTERNAL_ENGAGEMENT_RECORDED'
+                              ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+                            c.intent_status === 'POTENTIAL_OPPORTUNITY_SIGNAL'
+                              ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' :
+                              'bg-zinc-500/10 text-zinc-400 border-zinc-500/20'
+                          }`}>
+                            {(c.intent_status || 'NO_VERIFIED_INTENT').replace(/_/g, ' ')}
+                          </span>
+                          <div className="text-[10px] font-mono text-muted-foreground">
+                            Status: <span className="text-foreground font-medium">{c.candidate_status}</span>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Primary Evidence & Proof */}
+                      <td className="px-4 py-3.5">
+                        <div className="space-y-1 max-w-sm">
+                          <div className="text-foreground text-xs line-clamp-2 leading-relaxed" title={c.reason}>
+                            {c.reason || 'Evidence derived from discovery engine and market observations'}
+                          </div>
+                          <div className="text-[10px] text-primary flex items-center gap-1 font-mono group-hover:underline">
+                            <Eye className="w-3 h-3" />
+                            <span>Click to inspect proof citations & methodology</span>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-4 py-3.5 whitespace-nowrap text-right">
+                        <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            onClick={() => setSelectedCandidateId(c.id)}
+                            className="px-2.5 py-1 rounded bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 text-[11px] font-semibold transition-colors flex items-center gap-1"
+                          >
+                            <Eye className="w-3 h-3" />
+                            Profile
+                          </button>
+                          <button
+                            onClick={() => handleUpdateStatus(c.id, 'QUALIFIED')}
+                            title="Qualify Lead"
+                            className="px-2 py-1 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 text-[11px] font-medium transition-colors"
+                          >
+                            Qualify
+                          </button>
+                          <button
+                            onClick={() => handleUpdateStatus(c.id, 'SHORTLISTED')}
+                            title="Shortlist Lead"
+                            className="px-2 py-1 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 text-[11px] font-medium transition-colors"
+                          >
+                            Shortlist
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -509,6 +555,16 @@ export default function CustomerIntelligence() {
           </div>
         )}
       </div>
+
+      {/* Traceable Customer Intelligence Profile Drawer (Phases 2-9) */}
+      {selectedCandidateId && (
+        <CustomerProfileDrawer
+          candidateId={selectedCandidateId}
+          sessionToken={session?.access_token}
+          onClose={() => setSelectedCandidateId(null)}
+          onCandidateUpdated={() => fetchCandidates(subjectId)}
+        />
+      )}
 
       {/* Import Customer Dataset Modal */}
       {showImportModal && (

@@ -1,9 +1,10 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { encryptApiKey, decryptApiKey, maskApiKey } from '../utils/encryption';
+import { CopilotProxyService, DiscoveredModel, VerifiedCapabilities } from './copilot-proxy.service';
 
 export interface AIProviderConfigInput {
-  provider_name: 'OPENAI' | 'ANTHROPIC' | 'GEMINI' | 'AZURE_OPENAI' | 'CUSTOM_LLM' | 'LOCAL';
-  provider_display_name: string;
+  provider_name: 'NVIDIA' | 'OPENAI' | 'ANTHROPIC' | 'GEMINI' | 'AZURE_OPENAI' | 'CUSTOM_LLM' | 'LOCAL' | 'COPILOT_PROXY';
+  provider_display_name?: string;
   api_endpoint?: string;
   api_key?: string; // Plaintext from user input; encrypted before saving
   model_name: string;
@@ -30,6 +31,9 @@ export interface AIProviderConfigResponse {
   last_test_message?: string;
   last_test_at?: string;
   usage_count: number;
+  discovered_models?: string[];
+  verified_capabilities?: VerifiedCapabilities | null;
+  embedding_dimensions?: number | null;
 }
 
 export interface GroundedFeasibilityPayload {
@@ -168,6 +172,9 @@ export class AIProviderService {
       last_test_message: data.last_test_message,
       last_test_at: data.last_test_at,
       usage_count: data.usage_count || 0,
+      discovered_models: data.discovered_models || [],
+      verified_capabilities: data.verified_capabilities || null,
+      embedding_dimensions: data.embedding_dimensions || null,
     };
   }
 
@@ -187,7 +194,7 @@ export class AIProviderService {
     // Check existing record
     const { data: existing } = await this.supabase
       .from('ai_provider_configurations')
-      .select('id, api_key_ciphertext, api_key_masked')
+      .select('id, api_key_ciphertext, api_key_masked, last_test_status')
       .eq('organization_id', this.organizationId)
       .limit(1)
       .maybeSingle();
@@ -197,18 +204,33 @@ export class AIProviderService {
       maskedKey = existing.api_key_masked;
     }
 
+    // Configure defaults for COPILOT_PROXY
+    let resolvedEndpoint = input.api_endpoint?.trim() || null;
+    let resolvedDisplayName = input.provider_display_name;
+    let resolvedEnabled = input.is_enabled ?? true;
+
+    if (input.provider_name === 'COPILOT_PROXY') {
+      resolvedEndpoint = resolvedEndpoint || process.env.COPILOT_PROXY_URL || 'http://127.0.0.1:4141/v1';
+      resolvedDisplayName = resolvedDisplayName || 'GitHub Copilot API Proxy (Local / Custom Port)';
+      // If brand new configuration without existing test, disable by default
+      if (!existing && input.is_enabled === undefined) {
+        resolvedEnabled = false;
+      }
+    }
+
     const payload: any = {
       organization_id: this.organizationId,
       provider_name: input.provider_name,
-      provider_display_name: input.provider_display_name || `${input.provider_name} Engine`,
-      api_endpoint: input.api_endpoint || null,
+      provider_display_name: resolvedDisplayName || `${input.provider_name} Engine`,
+      api_endpoint: resolvedEndpoint,
       api_key_ciphertext: encryptedKey,
       api_key_masked: maskedKey,
-      model_name: input.model_name || 'gpt-4o',
+      model_name: input.model_name || (input.provider_name === 'COPILOT_PROXY' ? 'gpt-4o' : 'gpt-4o'),
       is_default: input.is_default ?? true,
-      is_enabled: input.is_enabled ?? true,
+      is_enabled: resolvedEnabled,
       max_output_tokens: input.max_output_tokens || 4000,
       temperature: input.temperature ?? 0.20,
+      last_test_status: existing?.last_test_status || 'NOT_TESTED',
       updated_at: new Date().toISOString(),
       updated_by: this.userId || null,
     };
@@ -258,7 +280,7 @@ export class AIProviderService {
   /**
    * Tests the connection to the configured AI provider.
    */
-  async testConnection(): Promise<{ success: boolean; message: string }> {
+  async testConnection(): Promise<{ success: boolean; message: string; details?: any }> {
     const { data: record, error } = await this.supabase
       .from('ai_provider_configurations')
       .select('*')
@@ -278,6 +300,60 @@ export class AIProviderService {
       const apiKey = decryptApiKey(record.api_key_ciphertext);
       if (!apiKey) {
         throw new Error('Failed to decrypt API key');
+      }
+
+      // If NVIDIA provider, execute comprehensive orchestrator health check
+      if (record.provider_name === 'NVIDIA') {
+        const { NVIDIAOrchestratorService } = require('./nvidia-orchestrator.service');
+        const orchestrator = new NVIDIAOrchestratorService(this.supabase, this.organizationId, this.userId);
+        const health = await orchestrator.checkHealth();
+        const isSuccess = health.overallHealthy;
+        const msg = isSuccess
+          ? `Connected to NVIDIA Nemotron 3 Ultra 550B (${health.capabilities.reasoning.latencyMs}ms). Enterprise Retrieval & Parse active.`
+          : `NVIDIA connection error: ${health.capabilities.reasoning.message}`;
+
+        await this.supabase
+          .from('ai_provider_configurations')
+          .update({
+            last_test_status: isSuccess ? 'SUCCESS' : 'FAILED',
+            last_test_message: msg,
+            last_test_at: new Date().toISOString(),
+          })
+          .eq('id', record.id);
+
+        return { success: isSuccess, message: msg };
+      }
+
+      // If COPILOT_PROXY provider, execute dynamic model discovery & capability probe
+      if (record.provider_name === 'COPILOT_PROXY') {
+        const copilotService = new CopilotProxyService();
+        const discovery = await copilotService.discoverModels(apiKey, record.api_endpoint);
+        const probe = await copilotService.verifyCapabilities(apiKey, record.model_name || 'gpt-4o', record.api_endpoint);
+
+        const isSuccess = probe.success;
+        const status = isSuccess ? 'SUCCESS' : 'FAILED';
+        const msg = probe.message;
+
+        await this.supabase
+          .from('ai_provider_configurations')
+          .update({
+            last_test_status: status,
+            last_test_message: msg,
+            last_test_at: new Date().toISOString(),
+            discovered_models: discovery.models,
+            verified_capabilities: probe.capabilities,
+            embedding_dimensions: probe.capabilities.embeddingDimensions || null,
+          })
+          .eq('id', record.id);
+
+        return {
+          success: isSuccess,
+          message: msg,
+          details: {
+            models: discovery.models,
+            verifiedCapabilities: probe.capabilities,
+          },
+        };
       }
 
       // If user has provided a real endpoint or key, we attempt a lightweight test
@@ -322,6 +398,20 @@ export class AIProviderService {
     // Check if active AI provider exists and is enabled
     if (config && config.is_enabled && config.last_test_status !== 'FAILED') {
       try {
+        if (config.provider_name === 'NVIDIA') {
+          const { NVIDIAOrchestratorService } = require('./nvidia-orchestrator.service');
+          const orchestrator = new NVIDIAOrchestratorService(this.supabase, this.organizationId, this.userId);
+          const aiResult = await orchestrator.evaluateGroundedFeasibility(payload);
+          await this.supabase
+            .from('ai_provider_configurations')
+            .update({
+              usage_count: (config.usage_count || 0) + 1,
+              last_successful_request_at: new Date().toISOString(),
+            })
+            .eq('id', config.id);
+          return aiResult;
+        }
+
         const aiResult = await this.executeAIRequest(config, payload);
         // Increment usage count
         await this.supabase
@@ -361,7 +451,69 @@ export class AIProviderService {
 
     if (rawRecord?.api_key_ciphertext) {
       const apiKey = decryptApiKey(rawRecord.api_key_ciphertext);
-      if (config.provider_name === 'OPENAI' && apiKey.startsWith('sk-') && !apiKey.includes('test')) {
+      if (config.provider_name === 'COPILOT_PROXY') {
+        try {
+          const { CopilotProxyService } = require('./copilot-proxy.service');
+          const proxy = new CopilotProxyService();
+          const textContent = await proxy.chatCompletion({
+            model: config.model_name || 'gpt-4o',
+            messages: [
+              {
+                role: 'system',
+                content:
+                  'You are an expert pharmaceutical CDMO manufacturing feasibility and commercial evaluation engine. ' +
+                  'You must strictly base your findings ONLY on the provided operational and financial facts. ' +
+                  'NEVER fabricate numbers. Output valid JSON adhering to the specified schema.',
+              },
+              { role: 'user', content: prompt },
+            ],
+            temperature: config.temperature,
+            max_tokens: config.max_output_tokens,
+            response_format: { type: 'json_object' },
+            apiEndpoint: config.api_endpoint,
+            apiKey: apiKey,
+          });
+
+          if (textContent) {
+            let parsed: any;
+            try {
+              parsed = JSON.parse(textContent);
+            } catch {
+              const match = textContent.match(/```json\s*([\s\S]*?)\s*```/) || textContent.match(/\{[\s\S]*\}/);
+              if (match) parsed = JSON.parse(match[1] || match[0]);
+            }
+            if (parsed) {
+              return {
+                source: 'AI_PROVIDER',
+                providerName: 'COPILOT_PROXY',
+                modelName: config.model_name,
+                executiveSummary: parsed.executiveSummary || this.generateDeterministicSummary(payload),
+                feasibilityConclusion: parsed.feasibilityConclusion || (payload.capacityAnalysis.isFeasible ? 'FEASIBLE' : 'CAPACITY_CONSTRAINED'),
+                commercialConclusion: parsed.commercialConclusion || (payload.commercialEconomics.grossMarginPct && payload.commercialEconomics.grossMarginPct >= 20 ? 'COMMERCIALLY_ATTRACTIVE' : 'BORDERLINE'),
+                keySupportingEvidence: parsed.keySupportingEvidence || [
+                  `Required Batch Plan: ${payload.batchPlan.estimatedBatches} batches of ${payload.batchPlan.batchSize} ${payload.quantityUnit} each.`,
+                  `Capacity Utilization: ${payload.capacityAnalysis.utilizationPct}% at designated line.`,
+                ],
+                criticalConstraints: parsed.criticalConstraints || [],
+                missingInformation: parsed.missingInformation || [],
+                contradictions: parsed.contradictions || [],
+                capacityBottlenecks: parsed.capacityBottlenecks || [payload.capacityAnalysis.bottleneck || 'None identified'],
+                scheduleRisks: parsed.scheduleRisks || [],
+                materialRisks: parsed.materialRisks || [],
+                qualityAndRegulatoryConcerns: parsed.qualityAndRegulatoryConcerns || [],
+                mainCostDrivers: parsed.mainCostDrivers || ['Raw Materials & API', 'Processing Equipment Usage'],
+                pricingAndMarginObservations: parsed.pricingAndMarginObservations || [],
+                alternativeScenarios: parsed.alternativeScenarios || [],
+                recommendedNextActions: parsed.recommendedNextActions || [],
+                confidenceExplanation: parsed.confidenceExplanation || 'Based on deterministic CDMO engineering calculations evaluated via Copilot API Proxy.',
+                evidenceReferences: parsed.evidenceReferences || [`Facility: ${payload.facilityName || 'Configured'}`, `RFQ: ${payload.rfqId || 'N/A'}`],
+              };
+            }
+          }
+        } catch (fetchErr) {
+          console.warn('Direct COPILOT_PROXY execution failed or timed out:', fetchErr);
+        }
+      } else if (config.provider_name === 'OPENAI' && apiKey.startsWith('sk-') && !apiKey.includes('test')) {
         try {
           const endpoint = config.api_endpoint || 'https://api.openai.com/v1/chat/completions';
           const controller = new AbortController();
@@ -514,8 +666,8 @@ export class AIProviderService {
       contradictions: [],
       capacityBottlenecks: [payload.capacityAnalysis.bottleneck || 'Compression & Packaging lines'],
       scheduleRisks: isTimeFeasible ? [] : [`Delivery delay of ${payload.timelineAnalysis.delayDays} days against customer target date.`],
-      materialRisks: payload.materialSufficiency.gaps.map(g => `${g.materialName}: Shortage of ${g.gapQuantity} ${g.unit} (Lead time: ${g.leadTimeDays || 'TBD'} days)`),
-      qualityAndRegulatoryConcerns: payload.qualityAndRegulatory.identifiedGaps,
+      materialRisks: (payload.materialSufficiency?.gaps || []).map(g => `${g.materialName}: Shortage of ${g.gapQuantity} ${g.unit} (Lead time: ${g.leadTimeDays || 'TBD'} days)`),
+      qualityAndRegulatoryConcerns: payload.qualityAndRegulatory?.identifiedGaps || [],
       mainCostDrivers: [
         'API and active substance raw materials',
         'Direct cleanroom manufacturing labor & machine hours',
@@ -602,5 +754,68 @@ export class AIProviderService {
       calculatedCommercials: payload.commercialEconomics,
       qualityGates: payload.qualityAndRegulatory,
     }, null, 2);
+  }
+
+  /**
+   * Discovers available models for COPILOT_PROXY (or returns standard catalog for other providers)
+   */
+  async discoverAvailableModels(
+    providerName?: string,
+    customEndpoint?: string
+  ): Promise<{ success: boolean; models: string[]; error?: string }> {
+    const config = await this.getConfig();
+    const effectiveProvider = providerName || config?.provider_name;
+
+    if (effectiveProvider === 'COPILOT_PROXY') {
+      const { data: rawRecord } = await this.supabase
+        .from('ai_provider_configurations')
+        .select('api_key_ciphertext')
+        .eq('organization_id', this.organizationId)
+        .eq('provider_name', 'COPILOT_PROXY')
+        .single();
+
+      if (!rawRecord?.api_key_ciphertext) {
+        return { success: false, models: [], error: 'No API key configured for Copilot Proxy.' };
+      }
+
+      const apiKey = decryptApiKey(rawRecord.api_key_ciphertext);
+      const { CopilotProxyService } = require('./copilot-proxy.service');
+      const proxy = new CopilotProxyService();
+      const discovery = await proxy.discoverModels(apiKey, customEndpoint || config?.api_endpoint);
+
+      if (discovery.success && discovery.models?.length > 0) {
+        // Cache discovered models in database config
+        await this.supabase
+          .from('ai_provider_configurations')
+          .update({ discovered_models: discovery.models })
+          .eq('organization_id', this.organizationId)
+          .eq('provider_name', 'COPILOT_PROXY');
+      }
+
+      return {
+        success: discovery.success,
+        models: discovery.models,
+        error: discovery.error,
+      };
+    }
+
+    if (effectiveProvider === 'OPENAI') {
+      return {
+        success: true,
+        models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo'],
+      };
+    }
+
+    if (effectiveProvider === 'NVIDIA') {
+      return {
+        success: true,
+        models: ['meta/llama-3.1-70b-instruct', 'meta/llama-3.1-8b-instruct', 'mistralai/mixtral-8x7b-instruct-v0.1'],
+      };
+    }
+
+    return {
+      success: true,
+      models: ['gpt-4o', 'claude-3-5-sonnet-20241022'],
+    };
   }
 }

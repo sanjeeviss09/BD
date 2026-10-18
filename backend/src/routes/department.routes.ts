@@ -9,6 +9,7 @@ import {
   createDepartment,
   updateDepartment,
   deleteDepartment,
+  bulkDeleteDepartments,
   downloadDepartmentTemplate,
   bulkUploadDepartments,
 } from '../controllers/department.controller';
@@ -27,6 +28,9 @@ router.get('/template', downloadDepartmentTemplate);
 
 // Bulk upload (supports both multipart file and JSON body)
 router.post('/bulk-upload', upload.single('file'), bulkUploadDepartments);
+
+// Bulk delete
+router.post('/bulk-delete', bulkDeleteDepartments);
 
 // Department Members
 router.get('/:id/members', getDepartmentMembers);

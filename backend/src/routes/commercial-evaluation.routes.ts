@@ -26,4 +26,11 @@ router.post('/:id/versions', requireAuth, loadUserContext, controller.createNewV
 // Export
 router.get('/:id/export', requireAuth, loadUserContext, controller.exportDossier);
 
+// CDMO Competitor Benchmarking & Strategic Decision Intelligence
+router.get('/:id/competitors', requireAuth, loadUserContext, controller.getCompetitors);
+router.post('/:id/benchmark', requireAuth, loadUserContext, controller.benchmarkEvaluation);
+router.get('/:id/benchmark', requireAuth, loadUserContext, controller.getBenchmark);
+router.get('/:id/decision-report', requireAuth, loadUserContext, controller.getBenchmark);
+router.get('/:id/export-excel', requireAuth, loadUserContext, controller.exportCDMODecisionReport);
+
 export default router;

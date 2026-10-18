@@ -24,12 +24,14 @@ import {
   createDepartment,
   updateDepartment,
   deleteDepartment,
+  bulkDeleteDepartments,
   downloadDepartmentTemplate,
   bulkUploadDepartments,
   fetchUsers,
   createUser,
   updateUser,
   deleteUser,
+  bulkDeleteUsers,
   downloadUserTemplate,
   bulkUploadUsers,
 } from '@/services/organization-directory.api';
@@ -99,6 +101,91 @@ export default function DepartmentEmployeeManagement() {
   const [userUploadErrors, setUserUploadErrors] = useState<string[]>([]);
   const [userUploading, setUserUploading] = useState<boolean>(false);
   const userFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Multi-select for Employees
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const [bulkUserDeleteModalOpen, setBulkUserDeleteModalOpen] = useState<boolean>(false);
+  const [bulkDeletingUsers, setBulkDeletingUsers] = useState<boolean>(false);
+
+  // Multi-select for Departments
+  const [selectedDeptIds, setSelectedDeptIds] = useState<string[]>([]);
+  const [bulkDeptDeleteModalOpen, setBulkDeptDeleteModalOpen] = useState<boolean>(false);
+  const [bulkDeletingDepts, setBulkDeletingDepts] = useState<boolean>(false);
+
+  // Multi-select employee helpers
+  const toggleSelectUser = (id: string) => {
+    setSelectedUserIds(prev =>
+      prev.includes(id) ? prev.filter(userId => userId !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAllUsers = () => {
+    if (selectedUserIds.length === filteredUsers.length && filteredUsers.length > 0) {
+      setSelectedUserIds([]);
+    } else {
+      setSelectedUserIds(filteredUsers.map(u => u.id));
+    }
+  };
+
+  const handleConfirmBulkDeleteUsers = async () => {
+    if (selectedUserIds.length === 0) return;
+    setBulkDeletingUsers(true);
+    try {
+      await bulkDeleteUsers(selectedUserIds, token);
+      setFeedback({
+        type: 'success',
+        message: `Successfully deleted ${selectedUserIds.length} staff member(s).`,
+      });
+      setSelectedUserIds([]);
+      setBulkUserDeleteModalOpen(false);
+      loadData(true);
+    } catch (err: any) {
+      setFeedback({ type: 'error', message: err.message || 'Failed to bulk delete staff members.' });
+    } finally {
+      setBulkDeletingUsers(false);
+    }
+  };
+
+  // Multi-select department helpers
+  const toggleSelectDept = (id: string) => {
+    setSelectedDeptIds(prev =>
+      prev.includes(id) ? prev.filter(deptId => deptId !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAllDepts = () => {
+    if (selectedDeptIds.length === filteredDepartments.length && filteredDepartments.length > 0) {
+      setSelectedDeptIds([]);
+    } else {
+      setSelectedDeptIds(filteredDepartments.map(d => d.id));
+    }
+  };
+
+  const handleConfirmBulkDeleteDepts = async () => {
+    if (selectedDeptIds.length === 0) return;
+    setBulkDeletingDepts(true);
+    try {
+      const res = await bulkDeleteDepartments(selectedDeptIds, token);
+      if (res.errors && res.errors.length > 0) {
+        setFeedback({
+          type: res.count > 0 ? 'success' : 'error',
+          message: `Deleted ${res.count} department(s). ${res.errors.join(' ')}`,
+        });
+      } else {
+        setFeedback({
+          type: 'success',
+          message: `Successfully deleted ${res.count} department(s).`,
+        });
+      }
+      setSelectedDeptIds([]);
+      setBulkDeptDeleteModalOpen(false);
+      loadData(true);
+    } catch (err: any) {
+      setFeedback({ type: 'error', message: err.message || 'Failed to bulk delete departments.' });
+    } finally {
+      setBulkDeletingDepts(false);
+    }
+  };
 
   // Load Data
   const loadData = async (isSilent = false) => {
@@ -687,12 +774,61 @@ export default function DepartmentEmployeeManagement() {
             </div>
           </div>
 
+          {/* Bulk Actions Banner for Departments */}
+          {selectedDeptIds.length > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-foreground animate-in fade-in slide-in-from-top-2">
+              <div className="flex items-center gap-2.5">
+                <div className="w-6 h-6 rounded-full bg-rose-500/20 text-rose-500 flex items-center justify-center font-bold text-xs">
+                  {selectedDeptIds.length}
+                </div>
+                <span className="text-xs font-semibold text-foreground">
+                  {selectedDeptIds.length} of {filteredDepartments.length} department{selectedDeptIds.length > 1 ? 's' : ''} selected
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={toggleSelectAllDepts}
+                  className="px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded transition-colors"
+                >
+                  {selectedDeptIds.length === filteredDepartments.length ? 'Deselect All' : 'Select All Visible'}
+                </button>
+                <button
+                  onClick={() => setSelectedDeptIds([])}
+                  className="px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded transition-colors"
+                >
+                  Clear
+                </button>
+                <button
+                  onClick={() => setBulkDeptDeleteModalOpen(true)}
+                  className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 shadow-sm transition-all"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Delete Selected ({selectedDeptIds.length})</span>
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Department List Table */}
           <div className="border border-border rounded-lg overflow-hidden bg-card shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead className="bg-muted/50 border-b border-border text-muted-foreground font-mono uppercase tracking-wider text-[10px]">
                   <tr>
+                    <th className="py-2.5 px-3 w-10 text-center">
+                      <input
+                        type="checkbox"
+                        checked={filteredDepartments.length > 0 && selectedDeptIds.length === filteredDepartments.length}
+                        ref={el => {
+                          if (el) {
+                            el.indeterminate = selectedDeptIds.length > 0 && selectedDeptIds.length < filteredDepartments.length;
+                          }
+                        }}
+                        onChange={toggleSelectAllDepts}
+                        className="w-4 h-4 rounded border-border text-primary focus:ring-primary/30 accent-rose-500 cursor-pointer"
+                        title="Select all visible departments"
+                      />
+                    </th>
                     <th className="py-2.5 px-4 font-semibold w-24">Code</th>
                     <th className="py-2.5 px-4 font-semibold">Department Name</th>
                     <th className="py-2.5 px-4 font-semibold hidden md:table-cell">Operational Scope</th>
@@ -704,76 +840,92 @@ export default function DepartmentEmployeeManagement() {
                 <tbody className="divide-y divide-border">
                   {loading ? (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                      <td colSpan={7} className="py-8 text-center text-muted-foreground">
                         <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-muted-foreground" />
                         <span>Loading department directory...</span>
                       </td>
                     </tr>
                   ) : filteredDepartments.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                      <td colSpan={7} className="py-8 text-center text-muted-foreground">
                         No departments found. Use &ldquo;Add Department&rdquo; or &ldquo;Upload Departments&rdquo; above.
                       </td>
                     </tr>
                   ) : (
-                    filteredDepartments.map((dept) => (
-                      <tr key={dept.id} className="hover:bg-muted/30 transition-colors">
-                        <td className="py-2.5 px-4 font-mono font-bold text-foreground">
-                          {dept.code}
-                        </td>
-                        <td className="py-2.5 px-4 font-medium text-foreground">
-                          <div className="flex items-center gap-2">
-                            <Building2 className="w-4 h-4 text-muted-foreground shrink-0" />
-                            <span>{dept.name}</span>
-                          </div>
-                        </td>
-                        <td className="py-2.5 px-4 text-muted-foreground truncate max-w-xs hidden md:table-cell">
-                          {dept.description || '—'}
-                        </td>
-                        <td className="py-2.5 px-4 text-center">
-                          <button
-                            onClick={() => {
-                              setUserDeptFilter(dept.id);
-                              setActiveTab('employees');
-                            }}
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-muted hover:bg-muted/80 text-foreground transition-colors"
-                            title="Filter staff in this department"
-                          >
-                            <Users className="w-3 h-3 text-muted-foreground" />
-                            <span>{dept.employee_count || 0}</span>
-                          </button>
-                        </td>
-                        <td className="py-2.5 px-4 text-center">
-                          <span
-                            className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold ${
-                              dept.status === 'ACTIVE'
-                                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                                : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
-                            }`}
-                          >
-                            {dept.status}
-                          </span>
-                        </td>
-                        <td className="py-2.5 px-4 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
+                    filteredDepartments.map((dept) => {
+                      const isSelected = selectedDeptIds.includes(dept.id);
+                      return (
+                        <tr
+                          key={dept.id}
+                          className={`transition-colors ${
+                            isSelected ? 'bg-rose-500/5 hover:bg-rose-500/10' : 'hover:bg-muted/30'
+                          }`}
+                        >
+                          <td className="py-2.5 px-3 text-center">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => toggleSelectDept(dept.id)}
+                              className="w-4 h-4 rounded border-border text-primary focus:ring-primary/30 accent-rose-500 cursor-pointer"
+                            />
+                          </td>
+                          <td className="py-2.5 px-4 font-mono font-bold text-foreground">
+                            {dept.code}
+                          </td>
+                          <td className="py-2.5 px-4 font-medium text-foreground">
+                            <div className="flex items-center gap-2">
+                              <Building2 className="w-4 h-4 text-muted-foreground shrink-0" />
+                              <span>{dept.name}</span>
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-4 text-muted-foreground truncate max-w-xs hidden md:table-cell">
+                            {dept.description || '—'}
+                          </td>
+                          <td className="py-2.5 px-4 text-center">
                             <button
-                              onClick={() => handleOpenDeptModal(dept)}
-                              className="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
-                              title="Edit department"
+                              onClick={() => {
+                                setUserDeptFilter(dept.id);
+                                setActiveTab('employees');
+                              }}
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-muted hover:bg-muted/80 text-foreground transition-colors"
+                              title="Filter staff in this department"
                             >
-                              <Edit2 className="w-3.5 h-3.5" />
+                              <Users className="w-3 h-3 text-muted-foreground" />
+                              <span>{dept.employee_count || 0}</span>
                             </button>
-                            <button
-                              onClick={() => handleDeleteDept(dept)}
-                              className="p-1.5 hover:bg-rose-500/10 rounded text-muted-foreground hover:text-rose-600 transition-colors"
-                              title="Delete department"
+                          </td>
+                          <td className="py-2.5 px-4 text-center">
+                            <span
+                              className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold ${
+                                dept.status === 'ACTIVE'
+                                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                                  : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
+                              }`}
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
+                              {dept.status}
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-4 text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                onClick={() => handleOpenDeptModal(dept)}
+                                className="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
+                                title="Edit department"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteDept(dept)}
+                                className="p-1.5 hover:bg-rose-500/10 rounded text-muted-foreground hover:text-rose-600 transition-colors"
+                                title="Delete department"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -864,12 +1016,61 @@ export default function DepartmentEmployeeManagement() {
             </div>
           </div>
 
+          {/* Bulk Actions Banner for Employees */}
+          {selectedUserIds.length > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-foreground animate-in fade-in slide-in-from-top-2">
+              <div className="flex items-center gap-2.5">
+                <div className="w-6 h-6 rounded-full bg-rose-500/20 text-rose-500 flex items-center justify-center font-bold text-xs">
+                  {selectedUserIds.length}
+                </div>
+                <span className="text-xs font-semibold text-foreground">
+                  {selectedUserIds.length} of {filteredUsers.length} employee{selectedUserIds.length > 1 ? 's' : ''} selected
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={toggleSelectAllUsers}
+                  className="px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded transition-colors"
+                >
+                  {selectedUserIds.length === filteredUsers.length ? 'Deselect All' : 'Select All Visible'}
+                </button>
+                <button
+                  onClick={() => setSelectedUserIds([])}
+                  className="px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded transition-colors"
+                >
+                  Clear
+                </button>
+                <button
+                  onClick={() => setBulkUserDeleteModalOpen(true)}
+                  className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 shadow-sm transition-all"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Delete Selected ({selectedUserIds.length})</span>
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Employee List Table */}
           <div className="border border-border rounded-lg overflow-hidden bg-card shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead className="bg-muted/50 border-b border-border text-muted-foreground font-mono uppercase tracking-wider text-[10px]">
                   <tr>
+                    <th className="py-2.5 px-3 w-10 text-center">
+                      <input
+                        type="checkbox"
+                        checked={filteredUsers.length > 0 && selectedUserIds.length === filteredUsers.length}
+                        ref={el => {
+                          if (el) {
+                            el.indeterminate = selectedUserIds.length > 0 && selectedUserIds.length < filteredUsers.length;
+                          }
+                        }}
+                        onChange={toggleSelectAllUsers}
+                        className="w-4 h-4 rounded border-border text-primary focus:ring-primary/30 accent-rose-500 cursor-pointer"
+                        title="Select all visible employees"
+                      />
+                    </th>
                     <th className="py-2.5 px-4 font-semibold w-24">Emp Code</th>
                     <th className="py-2.5 px-4 font-semibold">Staff Name & Contact</th>
                     <th className="py-2.5 px-4 font-semibold">Department</th>
@@ -881,78 +1082,94 @@ export default function DepartmentEmployeeManagement() {
                 <tbody className="divide-y divide-border">
                   {loading ? (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                      <td colSpan={7} className="py-8 text-center text-muted-foreground">
                         <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-muted-foreground" />
                         <span>Loading employee directory...</span>
                       </td>
                     </tr>
                   ) : filteredUsers.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                      <td colSpan={7} className="py-8 text-center text-muted-foreground">
                         No employees found matching filter criteria. Use &ldquo;Upload Staff&rdquo; above to import.
                       </td>
                     </tr>
                   ) : (
-                    filteredUsers.map((user) => (
-                      <tr key={user.id} className="hover:bg-muted/30 transition-colors">
-                        <td className="py-2.5 px-4 font-mono font-bold text-foreground">
-                          {user.employee_code || '—'}
-                        </td>
-                        <td className="py-2.5 px-4">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-7 h-7 rounded-full bg-foreground/10 text-foreground flex items-center justify-center font-bold text-xs uppercase shrink-0">
-                              {user.full_name.charAt(0)}
+                    filteredUsers.map((user) => {
+                      const isSelected = selectedUserIds.includes(user.id);
+                      return (
+                        <tr
+                          key={user.id}
+                          className={`transition-colors ${
+                            isSelected ? 'bg-rose-500/5 hover:bg-rose-500/10' : 'hover:bg-muted/30'
+                          }`}
+                        >
+                          <td className="py-2.5 px-3 text-center">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => toggleSelectUser(user.id)}
+                              className="w-4 h-4 rounded border-border text-primary focus:ring-primary/30 accent-rose-500 cursor-pointer"
+                            />
+                          </td>
+                          <td className="py-2.5 px-4 font-mono font-bold text-foreground">
+                            {user.employee_code || '—'}
+                          </td>
+                          <td className="py-2.5 px-4">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-7 h-7 rounded-full bg-foreground/10 text-foreground flex items-center justify-center font-bold text-xs uppercase shrink-0">
+                                {user.full_name.charAt(0)}
+                              </div>
+                              <div>
+                                <div className="font-semibold text-foreground">{user.full_name}</div>
+                                <div className="text-[11px] text-muted-foreground font-mono">{user.email}</div>
+                              </div>
                             </div>
-                            <div>
-                              <div className="font-semibold text-foreground">{user.full_name}</div>
-                              <div className="text-[11px] text-muted-foreground font-mono">{user.email}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-2.5 px-4">
-                          {user.departments ? (
-                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-muted text-foreground text-xs font-medium">
-                              <Building2 className="w-3 h-3 text-muted-foreground" />
-                              <span>{user.departments.name}</span>
+                          </td>
+                          <td className="py-2.5 px-4">
+                            {user.departments ? (
+                              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-muted text-foreground text-xs font-medium">
+                                <Building2 className="w-3 h-3 text-muted-foreground" />
+                                <span>{user.departments.name}</span>
+                              </span>
+                            ) : (
+                              <span className="text-amber-500 text-xs italic">(Unassigned)</span>
+                            )}
+                          </td>
+                          <td className="py-2.5 px-4 text-foreground font-medium">
+                            {user.designation || 'Staff Member'}
+                          </td>
+                          <td className="py-2.5 px-4 text-center">
+                            <span
+                              className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold ${
+                                user.status === 'ACTIVE'
+                                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                                  : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
+                              }`}
+                            >
+                              {user.status}
                             </span>
-                          ) : (
-                            <span className="text-amber-500 text-xs italic">(Unassigned)</span>
-                          )}
-                        </td>
-                        <td className="py-2.5 px-4 text-foreground font-medium">
-                          {user.designation || 'Staff Member'}
-                        </td>
-                        <td className="py-2.5 px-4 text-center">
-                          <span
-                            className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold ${
-                              user.status === 'ACTIVE'
-                                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                                : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
-                            }`}
-                          >
-                            {user.status}
-                          </span>
-                        </td>
-                        <td className="py-2.5 px-4 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              onClick={() => handleOpenUserModal(user)}
-                              className="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
-                              title="Edit employee"
-                            >
-                              <Edit2 className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteUser(user)}
-                              className="p-1.5 hover:bg-rose-500/10 rounded text-muted-foreground hover:text-rose-600 transition-colors"
-                              title="Deactivate employee"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
+                          </td>
+                          <td className="py-2.5 px-4 text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                onClick={() => handleOpenUserModal(user)}
+                                className="p-1.5 hover:bg-muted rounded text-muted-foreground hover:text-foreground transition-colors"
+                                title="Edit employee"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteUser(user)}
+                                className="p-1.5 hover:bg-rose-500/10 rounded text-muted-foreground hover:text-rose-600 transition-colors"
+                                title="Deactivate employee"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -1416,6 +1633,157 @@ export default function DepartmentEmployeeManagement() {
                   <span>Confirm & Import Staff</span>
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Bulk Delete Users Confirmation Modal */}
+      {bulkUserDeleteModalOpen && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-card border border-border rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
+            <div className="p-5 border-b border-border flex items-center justify-between">
+              <div className="flex items-center gap-2.5 text-rose-500">
+                <div className="w-8 h-8 rounded-full bg-rose-500/10 flex items-center justify-center">
+                  <Trash2 className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-foreground">Delete Selected Employees</h3>
+                  <p className="text-[11px] text-muted-foreground font-mono">
+                    {selectedUserIds.length} staff member{selectedUserIds.length > 1 ? 's' : ''} selected
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setBulkUserDeleteModalOpen(false)}
+                disabled={bulkDeletingUsers}
+                className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Are you sure you want to delete / deactivate the following{' '}
+                <strong className="text-foreground">{selectedUserIds.length} staff member(s)</strong>? This will remove them from the active organization roster and clear their active assignments.
+              </p>
+
+              {/* Selected preview chips */}
+              <div className="max-h-48 overflow-y-auto p-3 rounded-lg bg-muted/40 border border-border space-y-1.5">
+                {users
+                  .filter(u => selectedUserIds.includes(u.id))
+                  .map(u => (
+                    <div key={u.id} className="flex items-center justify-between text-xs py-1.5 px-2.5 rounded bg-card border border-border/50">
+                      <div className="flex items-center gap-2 truncate">
+                        <span className="font-mono text-[10px] text-muted-foreground font-semibold shrink-0">
+                          {u.employee_code || 'EMP'}
+                        </span>
+                        <span className="font-medium text-foreground truncate">{u.full_name}</span>
+                      </div>
+                      <span className="text-[10px] text-muted-foreground truncate shrink-0 max-w-[120px]">
+                        {u.departments?.name || u.designation || 'Staff'}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            <div className="p-4 bg-muted/20 border-t border-border flex items-center justify-end gap-2.5">
+              <button
+                onClick={() => setBulkUserDeleteModalOpen(false)}
+                disabled={bulkDeletingUsers}
+                className="px-3 py-1.5 border border-border text-xs font-medium rounded-lg hover:bg-muted text-foreground transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmBulkDeleteUsers}
+                disabled={bulkDeletingUsers}
+                className="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 shadow-sm transition-all disabled:opacity-50"
+              >
+                {bulkDeletingUsers ? (
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Trash2 className="w-3.5 h-3.5" />
+                )}
+                <span>{bulkDeletingUsers ? 'Deleting...' : `Confirm Delete (${selectedUserIds.length})`}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Delete Departments Confirmation Modal */}
+      {bulkDeptDeleteModalOpen && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-card border border-border rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
+            <div className="p-5 border-b border-border flex items-center justify-between">
+              <div className="flex items-center gap-2.5 text-rose-500">
+                <div className="w-8 h-8 rounded-full bg-rose-500/10 flex items-center justify-center">
+                  <Trash2 className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm text-foreground">Delete Selected Departments</h3>
+                  <p className="text-[11px] text-muted-foreground font-mono">
+                    {selectedDeptIds.length} department{selectedDeptIds.length > 1 ? 's' : ''} selected
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setBulkDeptDeleteModalOpen(false)}
+                disabled={bulkDeletingDepts}
+                className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Are you sure you want to delete the following{' '}
+                <strong className="text-foreground">{selectedDeptIds.length} department(s)</strong>? Departments with assigned personnel must have staff reassigned before deletion.
+              </p>
+
+              {/* Selected preview chips */}
+              <div className="max-h-48 overflow-y-auto p-3 rounded-lg bg-muted/40 border border-border space-y-1.5">
+                {departments
+                  .filter(d => selectedDeptIds.includes(d.id))
+                  .map(d => (
+                    <div key={d.id} className="flex items-center justify-between text-xs py-1.5 px-2.5 rounded bg-card border border-border/50">
+                      <div className="flex items-center gap-2 truncate">
+                        <span className="font-mono text-[10px] text-muted-foreground font-semibold shrink-0">
+                          {d.code}
+                        </span>
+                        <span className="font-medium text-foreground truncate">{d.name}</span>
+                      </div>
+                      <span className="text-[10px] text-muted-foreground font-mono shrink-0">
+                        {d.employee_count || 0} staff
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            <div className="p-4 bg-muted/20 border-t border-border flex items-center justify-end gap-2.5">
+              <button
+                onClick={() => setBulkDeptDeleteModalOpen(false)}
+                disabled={bulkDeletingDepts}
+                className="px-3 py-1.5 border border-border text-xs font-medium rounded-lg hover:bg-muted text-foreground transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmBulkDeleteDepts}
+                disabled={bulkDeletingDepts}
+                className="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 shadow-sm transition-all disabled:opacity-50"
+              >
+                {bulkDeletingDepts ? (
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Trash2 className="w-3.5 h-3.5" />
+                )}
+                <span>{bulkDeletingDepts ? 'Deleting...' : `Confirm Delete (${selectedDeptIds.length})`}</span>
+              </button>
             </div>
           </div>
         </div>

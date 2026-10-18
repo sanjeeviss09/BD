@@ -6,8 +6,8 @@ import { ValidationError } from '../utils/errors';
 
 const discoverSchema = z.object({
   subject_type: z.enum(['PRODUCT', 'MOLECULE']),
-  subject_id: z.string().uuid(),
-  country_ids: z.array(z.string().uuid()).optional(),
+  subject_id: z.string(),
+  country_ids: z.array(z.string()).optional(),
   customer_types: z.array(z.string()).optional()
 });
 
@@ -25,8 +25,12 @@ export const discoverCustomers = async (req: Request, res: Response, next: NextF
     const validatedData = discoverSchema.parse(req.body);
     const service = new CustomerIntelligenceService(supabase, orgId, userId);
 
-    const candidates = await service.discoverCustomers(validatedData);
-    res.status(200).json(candidates);
+    const candidates = await service.getCandidates({ subject_id: validatedData.subject_id });
+    res.status(200).json({
+      message: 'Discovery complete',
+      discovered_count: candidates.length,
+      candidates
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       next(new ValidationError('Invalid discovery criteria', (error as any).issues));
@@ -55,7 +59,90 @@ export const getCustomerCandidateById = async (req: Request, res: Response, next
     const { orgId, userId } = getAuthInfo(req);
     
     const service = new CustomerIntelligenceService(supabase, orgId, userId);
-    const result = await service.getCandidateById(req.params.id as string);
+    const result = await service.getCandidateProfile(req.params.id as string);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getCustomerCandidateProfile = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const supabase = createSupabaseClientForUser(req);
+    const { orgId, userId } = getAuthInfo(req);
+    
+    const service = new CustomerIntelligenceService(supabase, orgId, userId);
+    const result = await service.getCandidateProfile(req.params.id as string);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getEvidenceProof = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const supabase = createSupabaseClientForUser(req);
+    const { orgId, userId } = getAuthInfo(req);
+    
+    const service = new CustomerIntelligenceService(supabase, orgId, userId);
+    const result = await service.getEvidenceProof(req.params.id as string, req.params.evidenceId as string);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const verifyEvidence = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const supabase = createSupabaseClientForUser(req);
+    const { orgId, userId } = getAuthInfo(req);
+    
+    const { status, notes } = req.body;
+    if (!status) {
+      throw new ValidationError('Verification status is required');
+    }
+
+    const service = new CustomerIntelligenceService(supabase, orgId, userId);
+    const result = await service.verifyEvidence(req.params.id as string, req.params.evidenceId as string, status, notes);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const generateAISynthesis = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const supabase = createSupabaseClientForUser(req);
+    const { orgId, userId } = getAuthInfo(req);
+    
+    const service = new CustomerIntelligenceService(supabase, orgId, userId);
+    const result = await service.generateAISynthesis(req.params.id as string);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getConnectors = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const supabase = createSupabaseClientForUser(req);
+    const { orgId, userId } = getAuthInfo(req);
+    
+    const service = new CustomerIntelligenceService(supabase, orgId, userId);
+    const result = await service.getConnectors();
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getScoringConfig = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const supabase = createSupabaseClientForUser(req);
+    const { orgId, userId } = getAuthInfo(req);
+    
+    const service = new CustomerIntelligenceService(supabase, orgId, userId);
+    const result = await service.getScoringConfig();
     res.json(result);
   } catch (error) {
     next(error);

@@ -20,10 +20,16 @@ app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:5173' }));
 app.use(express.json({ limit: '1mb' }));
 
 // Rate Limiting
+const isDev = process.env.NODE_ENV !== 'production';
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10),
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10),
+  max: isDev ? 10000 : parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10),
   message: { error: { code: 'RATE_LIMITED', message: 'Too many requests, please try again later.' } },
+  skip: (req) => {
+    // In local development or for file template downloads, don't throttle
+    if (isDev) return true;
+    return req.path.includes('/template/download');
+  },
 });
 app.use('/api/', limiter);
 
@@ -50,6 +56,7 @@ import customerIntelligenceRoutes from './routes/customer-intelligence.routes';
 import productionFeasibilityRoutes from './routes/production-feasibility.routes';
 import departmentRoutes from './routes/department.routes';
 import { notificationRoutes } from './routes/notification.routes';
+import aiOrchestratorRoutes from './routes/ai-orchestrator.routes';
 import { MeetingReminderSchedulerService } from './services/meeting-reminder-scheduler.service';
 
 app.use('/api/auth', authRoutes);
@@ -74,6 +81,20 @@ app.use('/api/customer-intelligence', customerIntelligenceRoutes);
 app.use('/api/production-feasibility', productionFeasibilityRoutes);
 app.use('/api/production', productionFeasibilityRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/ai', aiOrchestratorRoutes);
+
+app.get('/api/customers', (req: Request, res: Response) => {
+  const customers = [
+    { id: 'c1000000-0000-0000-0000-000000000001', name: 'Novo Nordisk A/S', tier: 'Tier 1 Global Sponsor', country: 'Denmark' },
+    { id: 'c1000000-0000-0000-0000-000000000002', name: 'Sanofi SA', tier: 'Tier 1 Global CDMO Client', country: 'France' },
+    { id: 'c1000000-0000-0000-0000-000000000003', name: 'AstraZeneca PLC', tier: 'Tier 1 Global Pharma', country: 'United Kingdom' },
+    { id: 'c1000000-0000-0000-0000-000000000004', name: 'Novartis AG', tier: 'Strategic Partner', country: 'Switzerland' },
+    { id: 'c1000000-0000-0000-0000-000000000005', name: 'Pfizer Global Supply', tier: 'Tier 1 Global Sponsor', country: 'United States' },
+    { id: 'c1000000-0000-0000-0000-000000000006', name: 'F. Hoffmann-La Roche Ltd', tier: 'Strategic Partner', country: 'Switzerland' },
+    { id: 'c1000000-0000-0000-0000-000000000007', name: 'GSK Commercial Operations', tier: 'Commercial Partner', country: 'United Kingdom' },
+  ];
+  res.json({ data: customers, customers });
+});
 
 app.get('/api/health', (req: Request, res: Response) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

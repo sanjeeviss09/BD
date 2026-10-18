@@ -1,4 +1,4 @@
-export type MeetingStatus = 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+export type MeetingStatus = 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'AWAITING_MOM_REVIEW';
 export type MeetingClosureStatus = 'OPEN' | 'IN_CLOSURE' | 'CLOSED';
 export type MeetingPreparationStatus = 'PENDING' | 'IN_PROGRESS' | 'READY';
 
@@ -57,6 +57,16 @@ export interface Meeting {
   minutes_approved: boolean;
   minutes_approved_at?: string | null;
   status: MeetingStatus;
+  actual_start_time?: string | null;
+  actual_end_time?: string | null;
+  started_by?: string | null;
+  ended_by?: string | null;
+  mom_status?: 'DRAFT' | 'CONFIRMED' | null;
+  mom_draft?: any;
+  mom_confirmed_at?: string | null;
+  mom_confirmed_by?: string | null;
+  recording_status?: 'NOT_CONFIGURED' | 'CONSENT_REQUIRED' | 'ACTIVE' | 'PROCESSING' | 'COMPLETED' | null;
+  transcript_text?: string | null;
   created_at: string;
   updated_at: string;
 
@@ -71,6 +81,7 @@ export interface Meeting {
   series?: { id: string; title: string; recurrence_type: string; series_code?: string };
   previous_meeting?: { id: string; meeting_code: string; title: string; meeting_date: string };
   participants?: MeetingParticipant[];
+  points?: MeetingPoint[];
   stats?: {
     pointsCount: number;
     pendingActionCount: number;
@@ -166,6 +177,9 @@ export interface MeetingDecision {
   affected_rfq_id?: string | null;
   impact: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   followup_required: boolean;
+  is_confirmed?: boolean;
+  confirmed_by?: string | null;
+  confirmed_at?: string | null;
   linked_point_id?: string | null;
   linked_task_id?: string | null;
   created_by?: string | null;
@@ -256,6 +270,7 @@ export interface PreparationWorkspaceData {
   openRisks: any[];
   relatedContext: any;
   suggestedAgenda: string[];
+  suggestedQuestions?: string[];
 }
 
 export interface QuickCaptureSuggestion {

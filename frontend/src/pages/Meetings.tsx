@@ -13,7 +13,8 @@ import {
   ChevronRight,
   List,
   CalendarDays,
-  AlignLeft
+  AlignLeft,
+  Sparkles
 } from 'lucide-react';
 
 export default function Meetings() {
@@ -310,7 +311,17 @@ export default function Meetings() {
                     <div className="text-[10px] text-muted-foreground">{m.meeting_time} ({m.timezone})</div>
                   </td>
                   <td className="py-3 px-3">
-                    <div className="font-bold text-foreground">{m.title}</div>
+                    <div className="font-bold text-foreground flex items-center gap-1.5">
+                      {m.title}
+                      {m.location_or_link && (
+                        <span
+                          title={m.location_or_link}
+                          className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-primary/10 text-primary border border-primary/20"
+                        >
+                          Conferencing
+                        </span>
+                      )}
+                    </div>
                     {m.objective && <div className="text-[11px] text-muted-foreground truncate max-w-xs">{m.objective}</div>}
                   </td>
                   <td className="py-3 px-3">
@@ -330,9 +341,11 @@ export default function Meetings() {
                     <span
                       className={`text-[10px] font-mono px-2 py-0.5 rounded uppercase font-bold tracking-wider ${
                         m.status === 'IN_PROGRESS'
-                          ? 'bg-amber-500/10 text-amber-500'
+                          ? 'bg-amber-500/10 text-amber-500 border border-amber-500/30 animate-pulse'
                           : m.status === 'COMPLETED'
-                          ? 'bg-emerald-500/10 text-emerald-500'
+                          ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/30'
+                          : m.status === 'AWAITING_MOM_REVIEW'
+                          ? 'bg-purple-500/10 text-purple-400 border border-purple-500/30'
                           : 'bg-muted text-muted-foreground'
                       }`}
                     >
@@ -348,15 +361,59 @@ export default function Meetings() {
                     </div>
                   </td>
                   <td className="py-3 px-3 text-right">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/meetings/${m.id}`);
-                      }}
-                      className="px-2.5 py-1 text-[11px] font-semibold rounded bg-muted hover:bg-muted/80 text-foreground border border-border inline-flex items-center gap-1"
-                    >
-                      Open <ChevronRight className="w-3 h-3" />
-                    </button>
+                    <div className="inline-flex items-center gap-1.5">
+                      {m.status === 'SCHEDULED' && m.location_or_link && (
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            if (m.location_or_link) {
+                              let url = m.location_or_link.trim();
+                              if (!url.startsWith('http://') && !url.startsWith('https://')) url = `https://${url}`;
+                              window.open(url, '_blank');
+                            }
+                            // Also pop out sidecar companion
+                            const width = 480;
+                            const height = 880;
+                            window.open(
+                              `/meetings/${m.id}/companion`,
+                              `BDIQ_Meeting_Companion_${m.id}`,
+                              `width=${width},height=${height},left=20,top=20,resizable=yes,scrollbars=yes`
+                            );
+                            await meetingApi.startMeeting(m.id, session?.access_token);
+                            navigate(`/meetings/${m.id}`);
+                          }}
+                          className="px-2.5 py-1 text-[11px] font-bold rounded bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer shadow-xs"
+                          title="Start live meeting, launch call and pop out notes companion"
+                        >
+                          Start
+                        </button>
+                      )}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const width = 480;
+                          const height = 880;
+                          window.open(
+                            `/meetings/${m.id}/companion`,
+                            `BDIQ_Meeting_Companion_${m.id}`,
+                            `width=${width},height=${height},left=20,top=20,resizable=yes,scrollbars=yes`
+                          );
+                        }}
+                        className="p-1 rounded text-primary hover:bg-primary/10 border border-primary/20 cursor-pointer"
+                        title="Pop out Live Notes Companion Sidecar"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/meetings/${m.id}`);
+                        }}
+                        className="px-2.5 py-1 text-[11px] font-semibold rounded bg-muted hover:bg-muted/80 text-foreground border border-border inline-flex items-center gap-1 cursor-pointer"
+                      >
+                        Open <ChevronRight className="w-3 h-3" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

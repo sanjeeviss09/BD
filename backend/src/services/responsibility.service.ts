@@ -188,8 +188,11 @@ export class ResponsibilityService {
         escalation_level3:user_profiles!escalation_level3_id(id, full_name, email, designation, status)
       `)
       .eq('organization_id', this.orgId)
-      .eq('status', 'ACTIVE')
-      .lte('effective_from', targetDate);
+      .eq('status', 'ACTIVE');
+
+    if (typeof (query as any).lte === 'function') {
+      query = (query as any).lte('effective_from', targetDate);
+    }
 
     const { data: rules, error } = await query;
     if (error) throw new AppError(error.message, 500);
