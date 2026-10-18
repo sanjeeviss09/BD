@@ -241,6 +241,64 @@ export default function MeetingDetail() {
     return `${hrs > 0 ? `${hrs}:` : ''}${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Format Date to "Sun, Oct 18, 2026"
+  const formatDisplayDate = (dStr?: string | null) => {
+    if (!dStr) return 'Not scheduled';
+    try {
+      const d = new Date(dStr);
+      if (isNaN(d.getTime())) return dStr;
+      return d.toLocaleDateString(undefined, {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch {
+      return dStr;
+    }
+  };
+
+  // Format Time to "04:20 PM" or "10:35:17 AM"
+  const formatDisplayTime = (tStr?: string | null) => {
+    if (!tStr) return 'Not recorded';
+    try {
+      if (tStr.includes('T') || tStr.includes('Z')) {
+        const d = new Date(tStr);
+        if (!isNaN(d.getTime())) {
+          return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+      }
+      const parts = tStr.split(':');
+      if (parts.length >= 2) {
+        let h = parseInt(parts[0], 10);
+        const m = parts[1];
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12 || 12;
+        return `${h.toString().padStart(2, '0')}:${m} ${ampm}`;
+      }
+      return tStr;
+    } catch {
+      return tStr;
+    }
+  };
+
+  // Calculate Duration between two ISO timestamps (e.g. "9m 16s")
+  const formatDurationBetween = (startStr?: string | null, endStr?: string | null) => {
+    if (!startStr || !endStr) return null;
+    try {
+      const s = new Date(startStr).getTime();
+      const e = new Date(endStr).getTime();
+      if (isNaN(s) || isNaN(e) || e <= s) return null;
+      const diffSec = Math.floor((e - s) / 1000);
+      const mins = Math.floor(diffSec / 60);
+      const secs = diffSec % 60;
+      if (mins === 0) return `${secs}s`;
+      return `${mins}m ${secs}s`;
+    } catch {
+      return null;
+    }
+  };
+
   // Determine Conferencing Provider Badge
   const getConferencingBadge = (link?: string | null) => {
     if (!link) return { label: 'Link Not Configured', color: 'bg-muted text-muted-foreground' };
@@ -759,24 +817,32 @@ export default function MeetingDetail() {
             </div>
 
             {/* Sub-meta */}
-            <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground font-mono">
-              <span className="flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5" />
-                {meeting.meeting_date}
+            <div className="flex flex-wrap items-center gap-3.5 text-xs text-muted-foreground font-mono">
+              <span className="flex items-center gap-1.5 text-foreground/90 font-medium">
+                <Calendar className="w-3.5 h-3.5 text-primary" />
+                {formatDisplayDate(meeting.meeting_date)}
               </span>
-              <span className="flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5" />
-                {meeting.meeting_time} {meeting.end_time ? `- ${meeting.end_time}` : ''} ({meeting.timezone})
+              <span className="flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-amber-400" />
+                {formatDisplayTime(meeting.meeting_time)} {meeting.end_time ? `– ${formatDisplayTime(meeting.end_time)}` : ''} <span className="text-muted-foreground/70">({meeting.timezone})</span>
               </span>
+              {meeting.actual_start_time && meeting.actual_end_time && (
+                <span className="px-2 py-0.5 rounded bg-muted/60 border border-border/60 text-[11px] text-muted-foreground flex items-center gap-1">
+                  Actual: {formatDisplayTime(meeting.actual_start_time)} – {formatDisplayTime(meeting.actual_end_time)}
+                  {formatDurationBetween(meeting.actual_start_time, meeting.actual_end_time) && (
+                    <strong className="text-emerald-400 ml-1">({formatDurationBetween(meeting.actual_start_time, meeting.actual_end_time)})</strong>
+                  )}
+                </span>
+              )}
               {meeting.customer && (
-                <span className="flex items-center gap-1 text-foreground font-sans font-semibold">
-                  <Building2 className="w-3.5 h-3.5 text-primary" />
+                <span className="flex items-center gap-1.5 text-foreground font-sans font-semibold">
+                  <Building2 className="w-3.5 h-3.5 text-purple-400" />
                   {meeting.customer.name}
                 </span>
               )}
               {meeting.opportunity && (
-                <span className="flex items-center gap-1 text-foreground font-sans">
-                  <TrendingUp className="w-3.5 h-3.5 text-primary" />
+                <span className="flex items-center gap-1.5 text-foreground font-sans">
+                  <TrendingUp className="w-3.5 h-3.5 text-blue-400" />
                   {meeting.opportunity.title}
                 </span>
               )}
@@ -1447,221 +1513,533 @@ export default function MeetingDetail() {
 
           {/* TAB 5: MINUTES OF MEETING (MOM) REVIEW & CONFIRMATION */}
           {activeTab === 'minutes' && (
-            <div className="space-y-6">
-              {/* MOM Action Control Bar */}
-              <div className="p-4 rounded-xl bg-card border border-border shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                      <FileSpreadsheet className="w-4 h-4 text-primary" />
-                      Automatic Minutes of Meeting (MOM) — 18 Enterprise Sections
-                    </h3>
-                    <span
-                      className={`text-[10px] font-mono px-2 py-0.5 rounded uppercase font-bold tracking-wider ${
-                        meeting.mom_status === 'CONFIRMED'
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                          : 'bg-amber-500/10 text-amber-500 border border-amber-500/30'
-                      }`}
-                    >
-                      {meeting.mom_status === 'CONFIRMED' ? 'MOM CONFIRMED & APPROVED' : 'DRAFT IN REVIEW'}
-                    </span>
+            <div className="space-y-6 animate-in fade-in duration-200">
+              
+              {/* 1. MOM Action Control Bar */}
+              <div className="p-5 rounded-2xl bg-card border border-border/80 shadow-sm space-y-4">
+                {/* Header Info */}
+                <div className="flex items-start gap-3.5">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/25 flex items-center justify-center shrink-0 shadow-xs mt-0.5">
+                    <FileSpreadsheet className="w-5 h-5 text-primary" />
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Deterministic generation from saved notes, structured points, confirmed decisions, and canonical tasks.
-                  </p>
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <h3 className="text-base sm:text-lg font-bold text-foreground tracking-tight">
+                        Minutes of Meeting (MOM)
+                      </h3>
+                      <span
+                        className={`text-[10px] font-mono px-2.5 py-0.5 rounded-full uppercase font-bold tracking-wider whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
+                          meeting.mom_status === 'CONFIRMED'
+                            ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                            : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                        }`}
+                      >
+                        {meeting.mom_status === 'CONFIRMED' ? (
+                          <>
+                            <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                            <span>MOM CONFIRMED & APPROVED</span>
+                          </>
+                        ) : (
+                          <>
+                            <Clock className="w-3 h-3 text-amber-400 animate-pulse" />
+                            <span>DRAFT IN REVIEW</span>
+                          </>
+                        )}
+                      </span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-muted text-muted-foreground whitespace-nowrap shrink-0 border border-border/60">
+                        18 Enterprise Sections
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Deterministic executive record compiled from saved notes, structured points, confirmed decisions, and assigned tasks.
+                    </p>
+                  </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2 shrink-0">
-                  <button
-                    onClick={handleGenerateMOM}
-                    disabled={isGeneratingMOM}
-                    className="px-3.5 py-1.5 text-xs font-semibold rounded-lg border border-border hover:bg-muted text-foreground flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <RefreshCw className={`w-3.5 h-3.5 ${isGeneratingMOM ? 'animate-spin' : ''}`} />
-                    {isGeneratingMOM ? 'Generating...' : 'Re-Generate Draft'}
-                  </button>
+                {/* Dedicated Action Toolbar */}
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-border/60 bg-muted/20 -mx-5 -mb-5 p-4 rounded-b-2xl">
+                  <div className="text-xs text-muted-foreground font-mono flex items-center gap-1.5">
+                    <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+                    <span>Compliance: <strong className="text-foreground">{meeting.mom_status === 'CONFIRMED' ? 'Formally Approved' : 'Draft Review Active'}</strong></span>
+                  </div>
 
-                  <button
-                    onClick={handleExportMinutes}
-                    className="px-3.5 py-1.5 text-xs font-semibold rounded-lg border border-border hover:bg-muted text-foreground flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <Download className="w-3.5 h-3.5" /> Download Excel (.xlsx)
-                  </button>
-
-                  {meeting.mom_status !== 'CONFIRMED' && (
+                  <div className="flex flex-wrap items-center gap-2">
                     <button
-                      onClick={handleConfirmMOM}
-                      disabled={isConfirmingMOM || !momDraft}
-                      className="px-4 py-1.5 text-xs font-bold rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 flex items-center gap-1.5 cursor-pointer shadow-xs"
+                      onClick={handleGenerateMOM}
+                      disabled={isGeneratingMOM}
+                      className="px-3.5 py-1.5 text-xs font-semibold rounded-xl border border-border bg-card hover:bg-muted text-foreground flex items-center gap-1.5 cursor-pointer transition-all hover:border-border/80 shadow-xs"
+                      title="Re-run deterministic synthesis of MOM"
                     >
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      {isConfirmingMOM ? 'Confirming...' : 'Confirm & Approve MOM'}
+                      <RefreshCw className={`w-3.5 h-3.5 text-primary ${isGeneratingMOM ? 'animate-spin' : ''}`} />
+                      <span>{isGeneratingMOM ? 'Synthesizing...' : 'Re-Generate Draft'}</span>
                     </button>
-                  )}
+
+                    <button
+                      onClick={handleExportMinutes}
+                      className="px-3.5 py-1.5 text-xs font-semibold rounded-xl border border-border bg-card hover:bg-muted text-foreground flex items-center gap-1.5 cursor-pointer transition-all hover:border-border/80 shadow-xs"
+                      title="Export 7-sheet Microsoft Excel Workbook"
+                    >
+                      <Download className="w-3.5 h-3.5 text-blue-400" />
+                      <span>Download Excel (.xlsx)</span>
+                    </button>
+
+                    {meeting.mom_status !== 'CONFIRMED' ? (
+                      <button
+                        onClick={handleConfirmMOM}
+                        disabled={isConfirmingMOM || !momDraft}
+                        className="px-4 py-1.5 text-xs font-bold rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-600 text-white flex items-center gap-1.5 cursor-pointer shadow-md transition-all active:scale-[0.98]"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>{isConfirmingMOM ? 'Confirming...' : 'Confirm & Sign MOM'}</span>
+                      </button>
+                    ) : (
+                      <div className="px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-mono font-bold flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Signed Off & Approved</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
               {momSaveSuccess && (
-                <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-400 font-semibold flex items-center gap-2">
+                <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-400 font-semibold flex items-center gap-2 animate-in fade-in">
                   <Check className="w-4 h-4" /> MOM Draft regenerated and loaded successfully!
                 </div>
               )}
 
               {/* 18-Section MOM Viewer & Editor */}
               {momDraft ? (
-                <div className="p-6 rounded-xl bg-card border border-border shadow-sm space-y-6">
-                  {/* Metadata Header */}
-                  <div className="border-b border-border/80 pb-4">
-                    <div className="text-[10px] font-mono uppercase font-bold text-primary">
-                      {momDraft.section_01_meeting_title_and_reference?.meeting_reference || meeting.meeting_code}
-                    </div>
-                    <h2 className="text-xl font-black text-foreground mt-0.5">
-                      {momDraft.section_01_meeting_title_and_reference?.title || meeting.title}
-                    </h2>
-                    <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-muted-foreground mt-2">
-                      <span>Date: {momDraft.section_02_datetime_and_timezone?.date || meeting.meeting_date}</span>
-                      <span>Time: {momDraft.section_02_datetime_and_timezone?.scheduled_time || meeting.meeting_time} ({momDraft.section_02_datetime_and_timezone?.timezone || meeting.timezone})</span>
-                      <span>Actual Start: {momDraft.section_02_datetime_and_timezone?.actual_start_time || meeting.actual_start_time || 'Not recorded'}</span>
-                      <span>Actual End: {momDraft.section_02_datetime_and_timezone?.actual_end_time || meeting.actual_end_time || 'Not recorded'}</span>
+                <div className="space-y-6">
+
+                  {/* 2. Executive Document Letterhead & Session Specs */}
+                  <div className="rounded-2xl bg-card border border-border/80 shadow-sm overflow-hidden">
+                    <div className="h-1.5 w-full bg-gradient-to-r from-primary via-purple-500 to-emerald-500" />
+                    
+                    <div className="p-5 sm:p-6 space-y-5">
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 border-b border-border/60 pb-5">
+                        <div className="space-y-1.5 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-mono text-xs font-bold px-2.5 py-0.5 rounded-md bg-primary/15 text-primary border border-primary/25">
+                              {momDraft.section_01_meeting_title_and_reference?.meeting_reference || meeting.meeting_code}
+                            </span>
+                            <span className="text-xs px-2.5 py-0.5 rounded-md bg-muted text-muted-foreground font-medium">
+                              {momDraft.section_01_meeting_title_and_reference?.meeting_type || meeting.meeting_type}
+                            </span>
+                            {meeting.location_or_link && (
+                              <span className="text-xs px-2.5 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20 font-mono">
+                                {getConferencingBadge(meeting.location_or_link).label}
+                              </span>
+                            )}
+                          </div>
+                          <h2 className="text-xl sm:text-2xl font-black text-foreground tracking-tight pt-1">
+                            {momDraft.section_01_meeting_title_and_reference?.title || meeting.title}
+                          </h2>
+                        </div>
+
+                        {formatDurationBetween(meeting.actual_start_time, meeting.actual_end_time) && (
+                          <div className="sm:text-right shrink-0 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                            <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider font-semibold">Session Duration</div>
+                            <div className="text-base font-bold font-mono text-emerald-400 mt-0.5 flex items-center sm:justify-end gap-1.5">
+                              <Clock className="w-3.5 h-3.5 text-emerald-400" />
+                              <span>{formatDurationBetween(meeting.actual_start_time, meeting.actual_end_time)}</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* 4-Column Structured Metadata Grid */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div className="p-3.5 rounded-xl bg-muted/20 border border-border/60 space-y-1">
+                          <div className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
+                            <Calendar className="w-3.5 h-3.5 text-primary" /> Date & Schedule
+                          </div>
+                          <div className="text-xs font-bold text-foreground">
+                            {formatDisplayDate(momDraft.section_02_datetime_and_timezone?.date || meeting.meeting_date)}
+                          </div>
+                          <div className="text-[11px] font-mono text-muted-foreground">
+                            {formatDisplayTime(meeting.meeting_time)} – {formatDisplayTime(meeting.end_time || '')}
+                          </div>
+                        </div>
+
+                        <div className="p-3.5 rounded-xl bg-muted/20 border border-border/60 space-y-1">
+                          <div className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
+                            <Clock className="w-3.5 h-3.5 text-amber-400" /> Actual Runtime
+                          </div>
+                          <div className="text-xs font-mono font-semibold text-foreground">
+                            Start: {formatDisplayTime(meeting.actual_start_time)}
+                          </div>
+                          <div className="text-[11px] font-mono text-muted-foreground">
+                            End: {formatDisplayTime(meeting.actual_end_time)}
+                          </div>
+                        </div>
+
+                        <div className="p-3.5 rounded-xl bg-muted/20 border border-border/60 space-y-1">
+                          <div className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
+                            <Building2 className="w-3.5 h-3.5 text-purple-400" /> Presiding Organizer
+                          </div>
+                          <div className="text-xs font-bold text-foreground truncate">
+                            {momDraft.section_03_attendance_and_participants?.organizer || (meeting.organizer ? `${meeting.organizer.first_name} ${meeting.organizer.last_name}` : 'Platform Organizer')}
+                          </div>
+                          <div className="text-[11px] text-muted-foreground truncate">
+                            {meeting.department?.name || 'Business Development'}
+                          </div>
+                        </div>
+
+                        <div className="p-3.5 rounded-xl bg-muted/20 border border-border/60 space-y-1">
+                          <div className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
+                            <TrendingUp className="w-3.5 h-3.5 text-blue-400" /> Account & Opportunity
+                          </div>
+                          <div className="text-xs font-bold text-foreground truncate">
+                            {momDraft.section_03_attendance_and_participants?.customer || meeting.customer?.name || 'Internal Team'}
+                          </div>
+                          <div className="text-[11px] text-muted-foreground truncate">
+                            {meeting.opportunity?.title || meeting.rfq?.rfq_number || 'General Business'}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Section 6: Executive Summary */}
-                  <div className="space-y-2">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
-                      6. Executive Summary
-                    </h3>
+                  {/* 3. Executive Metrics Overview Strip */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="p-4 rounded-xl bg-card border border-border/80 shadow-xs flex items-center justify-between">
+                      <div>
+                        <div className="text-[10px] font-mono uppercase font-bold text-muted-foreground">Formal Decisions</div>
+                        <div className="text-xl font-black font-mono text-emerald-400 mt-1">
+                          {momDraft.section_09_confirmed_decisions?.length || decisions.length}
+                        </div>
+                      </div>
+                      <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center">
+                        <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-xl bg-card border border-border/80 shadow-xs flex items-center justify-between">
+                      <div>
+                        <div className="text-[10px] font-mono uppercase font-bold text-muted-foreground">Committed Tasks</div>
+                        <div className="text-xl font-black font-mono text-amber-400 mt-1">
+                          {momDraft.section_10_action_items?.length || points.filter(p => p.action_required).length}
+                        </div>
+                      </div>
+                      <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center">
+                        <CheckSquare className="w-4 h-4 text-amber-400" />
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-xl bg-card border border-border/80 shadow-xs flex items-center justify-between">
+                      <div>
+                        <div className="text-[10px] font-mono uppercase font-bold text-muted-foreground">Discussion Notes</div>
+                        <div className="text-xl font-black font-mono text-primary mt-1">
+                          {notes.length}
+                        </div>
+                      </div>
+                      <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/25 flex items-center justify-center">
+                        <FileText className="w-4 h-4 text-primary" />
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-xl bg-card border border-border/80 shadow-xs flex items-center justify-between">
+                      <div className="min-w-0 pr-1">
+                        <div className="text-[10px] font-mono uppercase font-bold text-muted-foreground">Next Target Date</div>
+                        <div className="text-xs font-bold font-mono text-foreground mt-1 truncate">
+                          {momDraft.section_17_next_meeting_date ? formatDisplayDate(momDraft.section_17_next_meeting_date) : 'Pending Schedule'}
+                        </div>
+                      </div>
+                      <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/25 flex items-center justify-center shrink-0">
+                        <Calendar className="w-4 h-4 text-blue-400" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 4. Section 6: Executive Summary */}
+                  <div className="p-5 sm:p-6 rounded-2xl bg-card border border-border/80 shadow-sm space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-primary/15 text-primary border border-primary/25">
+                          Section 06
+                        </span>
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                          Executive Summary
+                        </h3>
+                      </div>
+                      <span className="text-[10px] font-mono text-muted-foreground">
+                        {momDraft.section_06_executive_summary?.length || 0} characters
+                      </span>
+                    </div>
                     <textarea
                       rows={3}
                       value={momDraft.section_06_executive_summary || ''}
                       onChange={(e) => setMomDraft({ ...momDraft, section_06_executive_summary: e.target.value })}
-                      className="w-full p-3 text-xs rounded-lg bg-background border border-border text-foreground leading-relaxed resize-y"
+                      className="w-full p-3.5 text-xs rounded-xl bg-background border border-border text-foreground leading-relaxed resize-y focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all font-sans"
+                      placeholder="Executive summary of key takeaways and conclusions..."
                     />
                   </div>
 
-                  {/* Section 7: Discussion by Agenda Item */}
-                  <div className="space-y-2">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
-                      7. Discussion Summary by Agenda Item
-                    </h3>
+                  {/* 5. Section 7: Discussion by Agenda Item */}
+                  <div className="p-5 sm:p-6 rounded-2xl bg-card border border-border/80 shadow-sm space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-purple-500/15 text-purple-400 border border-purple-500/25">
+                          Section 07
+                        </span>
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                          Discussion Summary by Agenda Item
+                        </h3>
+                      </div>
+                      <span className="text-[10px] font-mono text-muted-foreground">Structured Notes Stream</span>
+                    </div>
                     <textarea
-                      rows={4}
+                      rows={5}
                       value={momDraft.section_07_discussion_by_agenda || ''}
                       onChange={(e) => setMomDraft({ ...momDraft, section_07_discussion_by_agenda: e.target.value })}
-                      className="w-full p-3 text-xs rounded-lg bg-background border border-border text-foreground font-mono leading-relaxed resize-y"
+                      className="w-full p-3.5 text-xs rounded-xl bg-background border border-border text-foreground font-mono leading-relaxed resize-y focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all"
+                      placeholder="Detailed agenda discussion points..."
                     />
                   </div>
 
-                  {/* Section 8: Technical and Commercial Findings */}
-                  <div className="space-y-2">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
-                      8. Technical & Commercial Findings
-                    </h3>
+                  {/* 6. Section 8: Technical and Commercial Findings */}
+                  <div className="p-5 sm:p-6 rounded-2xl bg-card border border-border/80 shadow-sm space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-blue-500/15 text-blue-400 border border-blue-500/25">
+                          Section 08
+                        </span>
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                          Technical & Commercial Findings
+                        </h3>
+                      </div>
+                      <span className="text-[10px] font-mono text-muted-foreground">Evaluations & Scope</span>
+                    </div>
                     <textarea
                       rows={3}
                       value={momDraft.section_08_technical_and_commercial_findings || ''}
                       onChange={(e) => setMomDraft({ ...momDraft, section_08_technical_and_commercial_findings: e.target.value })}
-                      className="w-full p-3 text-xs rounded-lg bg-background border border-border text-foreground leading-relaxed resize-y"
+                      className="w-full p-3.5 text-xs rounded-xl bg-background border border-border text-foreground leading-relaxed resize-y focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all font-sans"
+                      placeholder="Technical assessment and commercial findings..."
                     />
                   </div>
 
-                  {/* Section 9: Confirmed Decisions */}
-                  <div className="space-y-2">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
-                      9. Confirmed Decisions ({momDraft.section_09_confirmed_decisions?.length || 0})
-                    </h3>
-                    <div className="space-y-2">
-                      {momDraft.section_09_confirmed_decisions?.length === 0 ? (
-                        <p className="text-xs text-muted-foreground italic">No confirmed decisions recorded.</p>
+                  {/* 7. Section 9: Confirmed Formal Decisions */}
+                  <div className="p-5 sm:p-6 rounded-2xl bg-card border border-border/80 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
+                          Section 09
+                        </span>
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                          Confirmed Decisions
+                        </h3>
+                      </div>
+                      <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">
+                        {momDraft.section_09_confirmed_decisions?.length || 0} Formalized
+                      </span>
+                    </div>
+
+                    <div className="space-y-2.5">
+                      {(!momDraft.section_09_confirmed_decisions || momDraft.section_09_confirmed_decisions.length === 0) ? (
+                        <div className="p-6 text-center border border-dashed border-border rounded-xl text-muted-foreground italic text-xs">
+                          No confirmed decisions recorded for this session.
+                        </div>
                       ) : (
-                        momDraft.section_09_confirmed_decisions?.map((d: any, idx: number) => (
-                          <div key={idx} className="p-2.5 rounded-lg bg-background border border-border text-xs flex items-center justify-between">
-                            <div>
-                              <span className="font-mono font-bold text-primary mr-2">[{d.code}]</span>
-                              <span className="font-semibold text-foreground">{d.title}</span>
-                              <span className="text-[10px] font-mono text-muted-foreground ml-2">(Impact: {d.impact})</span>
+                        momDraft.section_09_confirmed_decisions.map((d: any, idx: number) => (
+                          <div key={idx} className="p-3.5 rounded-xl bg-background border border-border/80 hover:border-border space-y-2 transition-colors">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono text-xs font-bold text-primary px-2 py-0.5 rounded bg-primary/10">
+                                  {d.code}
+                                </span>
+                                <span className="font-bold text-xs text-foreground">{d.title}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
+                                  d.impact === 'CRITICAL'
+                                    ? 'bg-rose-500/15 text-rose-400'
+                                    : d.impact === 'HIGH'
+                                    ? 'bg-amber-500/15 text-amber-400'
+                                    : 'bg-blue-500/15 text-blue-400'
+                                }`}>
+                                  IMPACT: {d.impact || 'MEDIUM'}
+                                </span>
+                                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-bold flex items-center gap-1">
+                                  <CheckCircle2 className="w-3 h-3" />
+                                  <span>{d.status || 'CONFIRMED'}</span>
+                                </span>
+                              </div>
                             </div>
-                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-bold">
-                              {d.status}
-                            </span>
+                            {d.rationale && (
+                              <p className="text-[11px] text-muted-foreground leading-normal pl-1">
+                                <strong className="text-foreground">Rationale:</strong> {d.rationale}
+                              </p>
+                            )}
                           </div>
                         ))
                       )}
                     </div>
                   </div>
 
-                  {/* Section 10: Action Items */}
-                  <div className="space-y-2">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
-                      10. Action Items & Linked Tasks ({momDraft.section_10_action_items?.length || 0})
-                    </h3>
-                    <div className="space-y-2">
-                      {momDraft.section_10_action_items?.length === 0 ? (
-                        <p className="text-xs text-muted-foreground italic">No action items recorded.</p>
+                  {/* 8. Section 10: Action Items & Accountable Tasks */}
+                  <div className="p-5 sm:p-6 rounded-2xl bg-card border border-border/80 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/25">
+                          Section 10
+                        </span>
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                          Action Items & Linked Canonical Tasks
+                        </h3>
+                      </div>
+                      <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-amber-500/10 text-amber-400">
+                        {momDraft.section_10_action_items?.length || 0} Accountable
+                      </span>
+                    </div>
+
+                    <div className="space-y-2.5">
+                      {(!momDraft.section_10_action_items || momDraft.section_10_action_items.length === 0) ? (
+                        <div className="p-6 text-center border border-dashed border-border rounded-xl text-muted-foreground italic text-xs">
+                          No action items recorded for this session.
+                        </div>
                       ) : (
-                        momDraft.section_10_action_items?.map((act: any, idx: number) => (
-                          <div key={idx} className="p-2.5 rounded-lg bg-background border border-border text-xs flex items-center justify-between">
-                            <div>
-                              <span className="font-mono font-bold text-primary mr-2">[{act.code}]</span>
-                              <span className="font-semibold text-foreground">{act.title}</span>
-                              <span className="text-[10px] font-mono text-muted-foreground ml-2">
-                                Owner: {act.owner} | Due: {act.due_date}
+                        momDraft.section_10_action_items.map((act: any, idx: number) => (
+                          <div key={idx} className="p-3.5 rounded-xl bg-background border border-border/80 hover:border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors">
+                            <div className="space-y-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono text-xs font-bold text-amber-400 px-2 py-0.5 rounded bg-amber-500/10">
+                                  {act.code}
+                                </span>
+                                <span className="font-bold text-xs text-foreground">{act.title}</span>
+                              </div>
+                              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+                                <span>Owner: <strong className="text-foreground">{act.owner || 'Unassigned'}</strong></span>
+                                <span>Due: <strong className="text-foreground">{formatDisplayDate(act.due_date)}</strong></span>
+                              </div>
+                            </div>
+                            <div className="shrink-0">
+                              <span className="text-[10px] font-mono px-2.5 py-1 rounded-md bg-muted text-muted-foreground font-semibold flex items-center gap-1 border border-border">
+                                <CheckSquare className="w-3 h-3 text-primary" />
+                                <span>{act.task_reference || 'CANONICAL_TASK'}</span>
                               </span>
                             </div>
-                            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-muted text-muted-foreground font-bold">
-                              {act.task_reference}
-                            </span>
                           </div>
                         ))
                       )}
                     </div>
                   </div>
 
-                  {/* Section 16 & 17: Next Steps & Next Meeting */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
-                        16. Next Steps
-                      </h3>
-                      <textarea
-                        rows={2}
-                        value={momDraft.section_16_next_steps || ''}
-                        onChange={(e) => setMomDraft({ ...momDraft, section_16_next_steps: e.target.value })}
-                        className="w-full p-2.5 text-xs rounded-lg bg-background border border-border text-foreground leading-relaxed"
-                      />
-                    </div>
+                  {/* 9. Section 16 & 17: Next Steps & Next Meeting Preparation */}
+                  <div className="p-5 sm:p-6 rounded-2xl bg-card border border-border/80 shadow-sm space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <div className="space-y-2.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-blue-500/15 text-blue-400 border border-blue-500/25">
+                            Section 16
+                          </span>
+                          <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                            Immediate Next Steps
+                          </h3>
+                        </div>
+                        <textarea
+                          rows={3}
+                          value={momDraft.section_16_next_steps || ''}
+                          onChange={(e) => setMomDraft({ ...momDraft, section_16_next_steps: e.target.value })}
+                          className="w-full p-3.5 text-xs rounded-xl bg-background border border-border text-foreground leading-relaxed resize-y focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all font-sans"
+                          placeholder="Key next steps and milestone deadlines..."
+                        />
+                      </div>
 
-                    <div className="space-y-2">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
-                        17. Next Meeting Date
-                      </h3>
-                      <input
-                        type="date"
-                        value={momDraft.section_17_next_meeting_date || ''}
-                        onChange={(e) => setMomDraft({ ...momDraft, section_17_next_meeting_date: e.target.value })}
-                        className="w-full p-2 text-xs rounded-lg bg-background border border-border text-foreground font-mono"
-                      />
+                      <div className="space-y-2.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-primary/15 text-primary border border-primary/25">
+                            Section 17
+                          </span>
+                          <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                            Next Target Meeting Date
+                          </h3>
+                        </div>
+                        <input
+                          type="date"
+                          value={momDraft.section_17_next_meeting_date || ''}
+                          onChange={(e) => setMomDraft({ ...momDraft, section_17_next_meeting_date: e.target.value })}
+                          className="w-full p-3 text-xs rounded-xl bg-background border border-border text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all cursor-pointer"
+                          style={{ colorScheme: 'dark' }}
+                        />
+                        {/* Quick Presets */}
+                        <div className="flex items-center gap-1.5 pt-1">
+                          <span className="text-[10px] text-muted-foreground font-semibold">Quick Set:</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const d = new Date();
+                              d.setDate(d.getDate() + 7);
+                              setMomDraft({ ...momDraft, section_17_next_meeting_date: d.toISOString().split('T')[0] });
+                            }}
+                            className="px-2 py-0.5 text-[10px] rounded bg-muted hover:bg-muted/80 text-foreground font-mono transition-colors cursor-pointer"
+                          >
+                            +1 Wk
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const d = new Date();
+                              d.setDate(d.getDate() + 14);
+                              setMomDraft({ ...momDraft, section_17_next_meeting_date: d.toISOString().split('T')[0] });
+                            }}
+                            className="px-2 py-0.5 text-[10px] rounded bg-muted hover:bg-muted/80 text-foreground font-mono transition-colors cursor-pointer"
+                          >
+                            +2 Wks
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const d = new Date();
+                              d.setDate(d.getDate() + 30);
+                              setMomDraft({ ...momDraft, section_17_next_meeting_date: d.toISOString().split('T')[0] });
+                            }}
+                            className="px-2 py-0.5 text-[10px] rounded bg-muted hover:bg-muted/80 text-foreground font-mono transition-colors cursor-pointer"
+                          >
+                            +1 Mo
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Section 18: Audit Trail */}
-                  <div className="pt-4 border-t border-border/80 text-[11px] font-mono text-muted-foreground flex items-center justify-between">
-                    <span>Generated By: {momDraft.section_18_source_and_generation_metadata?.generated_by || 'BDIQ System'}</span>
-                    <span>Timestamp: {momDraft.section_18_source_and_generation_metadata?.generated_at}</span>
+                  {/* 10. Section 18: Official Audit Trail & Digital Certificate */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-muted/15 border border-border/80 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>
+                        Generated Deterministically by: <strong className="text-foreground">{momDraft.section_18_source_and_generation_metadata?.generated_by || 'BDIQ Enterprise Platform'}</strong>
+                      </span>
+                    </div>
+                    <div className="font-mono text-[11px] sm:text-right">
+                      Audit Timestamp: <strong className="text-foreground">{formatDisplayDate(momDraft.section_18_source_and_generation_metadata?.generated_at)} {formatDisplayTime(momDraft.section_18_source_and_generation_metadata?.generated_at)}</strong>
+                    </div>
                   </div>
+
                 </div>
               ) : (
-                <div className="p-8 text-center border border-dashed border-border rounded-xl text-muted-foreground text-xs space-y-3">
-                  <p>MOM Draft has not been generated yet.</p>
+                <div className="p-12 text-center border border-dashed border-border/80 rounded-2xl text-muted-foreground text-xs space-y-4 bg-muted/5">
+                  <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto text-primary shadow-sm">
+                    <FileSpreadsheet className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-foreground">Official Minutes of Meeting Not Yet Compiled</h4>
+                    <p className="text-xs text-muted-foreground mt-1 max-w-md mx-auto">
+                      Click below to deterministically compile the official 18 enterprise sections from this session's saved notes, confirmed decisions, and assigned tasks.
+                    </p>
+                  </div>
                   <button
                     onClick={handleGenerateMOM}
                     disabled={isGeneratingMOM}
-                    className="px-4 py-2 text-xs font-bold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer shadow-xs"
+                    className="px-5 py-2.5 text-xs font-bold rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer shadow-md transition-all active:scale-[0.98] inline-flex items-center gap-2"
                   >
-                    {isGeneratingMOM ? 'Generating...' : 'Generate MOM Draft Now'}
+                    <RefreshCw className={`w-3.5 h-3.5 ${isGeneratingMOM ? 'animate-spin' : ''}`} />
+                    <span>{isGeneratingMOM ? 'Synthesizing...' : 'Generate 18-Section MOM Now'}</span>
                   </button>
                 </div>
               )}
+
             </div>
           )}
 
