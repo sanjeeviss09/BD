@@ -20,25 +20,43 @@ An enterprise pharmaceutical CDMO Business Development Intelligence, Opportunity
 
 ---
 
+## Live Deployments & Cloud Hosting
+
+- **Frontend (Vercel)**: [https://frontend-ten-olive-29.vercel.app](https://frontend-ten-olive-29.vercel.app)
+- **Deployment Spec**: See [`DEPLOYMENT.md`](./DEPLOYMENT.md) for full configuration, environment variables, and architecture details.
+
+---
+
 ## Hosting & Deployment Guide
 
 ### 1. Backend on Render (Web Service)
 
+#### Option A: One-Click Blueprint (Recommended)
+1. Go to [Render Dashboard](https://dashboard.render.com) &rarr; **New +** &rarr; **Blueprint**.
+2. Select repository `https://github.com/sanjeeviss09/BD.git`.
+3. Render automatically reads [`render.yaml`](./render.yaml), sets up the service, builds TypeScript, and binds the health check path (`/health`).
+
+#### Option B: Manual Web Service
 1. Create a **New Web Service** on [Render](https://render.com) and connect the GitHub repository `https://github.com/sanjeeviss09/BD.git`.
 2. Configure settings:
    - **Root Directory**: `backend`
    - **Runtime**: `Node`
    - **Build Command**: `npm install && npm run build`
    - **Start Command**: `npm start`
+   - **Health Check Path**: `/health`
 3. Add Environment Variables on Render:
    | Variable | Value / Description |
    | :--- | :--- |
    | `NODE_ENV` | `production` |
-   | `PORT` | `4000` (or Render's default `$PORT`) |
-   | `FRONTEND_URL` | Your Vercel frontend URL (e.g., `https://your-app.vercel.app`) |
+   | `PORT` | `10000` (or Render's default `$PORT`) |
+   | `FRONTEND_URL` | `https://frontend-ten-olive-29.vercel.app` |
    | `SUPABASE_URL` | Your Supabase project URL |
    | `SUPABASE_ANON_KEY` | Your Supabase anon public key |
    | `SUPABASE_SERVICE_ROLE_KEY` | Your Supabase service role secret key |
+   | `NVIDIA_API_KEY` | Your NVIDIA API key |
+   | `NVIDIA_NEMOTRON_PARSE_KEY` | Your Nemotron Parse key |
+   | `NVIDIA_RETRIEVER_KEY` | Your NeMo Retriever key |
+   | `NVIDIA_BASE_URL` | `https://integrate.api.nvidia.com/v1` |
 
 ---
 
@@ -53,9 +71,9 @@ An enterprise pharmaceutical CDMO Business Development Intelligence, Opportunity
 3. Add Environment Variables on Vercel:
    | Variable | Value / Description |
    | :--- | :--- |
-   | `VITE_SUPABASE_URL` | Your Supabase project URL |
+   | `VITE_SUPABASE_URL` | `https://ihykbjwzferyqqzazhfk.supabase.co` |
    | `VITE_SUPABASE_ANON_KEY` | Your Supabase anon public key |
-   | `VITE_API_URL` | Your Render backend URL (e.g., `https://your-backend.onrender.com`) |
+   | `VITE_API_URL` | Your Render backend URL (e.g., `https://bdiq-backend.onrender.com`) |
 
 *Note: `frontend/vercel.json` is pre-configured with SPA route rewrites to ensure seamless client-side navigation.*
 

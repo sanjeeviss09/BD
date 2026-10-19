@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: bdiq-backend
+    runtime: node
+    plan: free
+    region: oregon
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: FRONTEND_URL
+        value: https://frontend-ten-olive-29.vercel.app
+      - key: SUPABASE_URL
+        value: https://ihykbjwzferyqqzazhfk.supabase.co
+      - key: SUPABASE_ANON_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImloeWtiand6ZmVyeXFxemF6aGZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyOTYwNTIsImV4cCI6MjEwNjg3MjA1Mn0.GXRg3yjFv-4CUTB_jnL3cyQVCY6SiSRnwBKEtteHqQc
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: NVIDIA_API_KEY
+        sync: false
+      - key: NVIDIA_NEMOTRON_PARSE_KEY
+        sync: false
+      - key: NVIDIA_RETRIEVER_KEY
+        sync: false
+      - key: NVIDIA_BASE_URL
+        value: https://integrate.api.nvidia.com/v1

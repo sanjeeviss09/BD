@@ -27,7 +27,7 @@ export interface UserProfile {
   departments?: { name: string; code?: string };
 }
 
-const API_BASE = 'http://localhost:4000/api';
+const API_BASE = `${(import.meta.env.VITE_API_URL || 'http://localhost:4000').replace(/\/+$/, '')}/api`;
 
 const getHeaders = (token?: string) => ({
   'Content-Type': 'application/json',

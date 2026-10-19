@@ -34,7 +34,7 @@
       "started_by": "be8d34d1-0299-4ab8-8c0a-a163a06c78ed",
       "recording_status": "NOT_CONFIGURED",
       "transcription_status": "NOT_CONFIGURED",
-      "mom_status": "DRAFT",
+      "mom_status": "CONFIRMED",
       "mom_draft": {
         "section_01_meeting_title_and_reference": {
           "meeting_reference": "MEET-2026-4294",
@@ -79,9 +79,9 @@
         },
         "mom_text": "================================================================================\nMINUTES OF MEETING (MOM): TEST\nREFERENCE CODE: MEET-2026-4294 | STATUS: DRAFT | VERSION: 1\n================================================================================\n\n1. MEETING IDENTIFICATION & REFERENCE\n• Title: Test\n• Unique Reference: MEET-2026-4294\n• Meeting Type: Customer Meeting\n• Conferencing Link: https://meet.google.com/sme-xcnb-ndq\n• Platform: GOOGLE_MEET\n\n2. SCHEDULE & TIMING\n• Scheduled Date: 2026-10-18\n• Scheduled Time: 04:20:00 - 05:25:00 (Asia/Kolkata)\n• Actual Session Start: 2026-10-18T10:35:17.218Z\n• Actual Session End: 2026-10-18T10:44:33.187Z\n\n3. ATTENDANCE & PARTICIPANTS\n• Presiding / Organizer: Platform Organizer\n• Client / Partner Organization: Internal Team\n• Related Opportunity / Scope: Standard Business Development\n• Attendees Recorded: Registered attendees and project team\n\n4. MEETING OBJECTIVE\nReview project milestones, evaluate technical formulation batch feasibility, and establish delivery commitments.\n\n5. ADOPTED AGENDA\n1. Review of previous actions\n2. Technical & commercial progress\n3. Decisions, task ownership & milestone confirmation\n\n6. EXECUTIVE SUMMARY\nMeeting MEET-2026-4294 was held on 2026-10-18 bringing together key stakeholders from Internal Team and technical BD. During this live session, 3 discussion notes were recorded, 0 formal decisions were agreed upon, and 0 concrete action item(s) were assigned to accountable functional owners with confirmed deadlines. No critical bottlenecks unmitigated.\n\n7. DISCUSSION SUMMARY BY AGENDA ITEM\n  [Note 1] (NOTE): • [ACTION]\n  [Note 2] (NOTE): Meeting Notes\n  [Note 3] (NOTE): Meeting Notes\n\n\n8. TECHNICAL AND COMMERCIAL FINDINGS\n• Technical Assessment: Technical scope and execution parameters validated by team.\n• Commercial Scope: Commercial terms aligned with enterprise schedule.\n\n9. CONFIRMED DECISIONS (0)\nNo formal decisions recorded.\n\n\n10. ACTION ITEMS & CANONICAL TASKS (0)\nNo action items created.\n\n\n11. RESPONSIBLE DEPARTMENTS & ASSIGNMENT BREAKDOWN\n• Cross-functional leadership\n\n\n\n12. AGREED DUE DATES & TIMELINES\n• All actions to be initiated within 48 hours of MOM receipt.\n\n\n\n13. RISKS, DEPENDENCIES & BOTTLENECK MITIGATION\nNo high-risk dependencies identified during this meeting.\n\n\n14. UNRESOLVED QUESTIONS & PARKED DISCUSSIONS\nAll key points raised were resolved or converted into action items.\n\n\n15. CARRIED-FORWARD ITEMS FROM PREVIOUS SESSIONS\nNo previous carried-forward items.\n\n\n16. NEXT STEPS & IMMEDIATE ACTIONS\n1. Circulate draft Minutes of Meeting for review and confirmation.\n2. Execute created BDIQ canonical tasks according to agreed milestone deadlines.\n3. Conduct follow-up progress review prior to next scheduled session.\n\n17. NEXT MEETING SCHEDULE\nTarget Follow-up: To be scheduled based on milestone completion\n\n18. SOURCE, GENERATION & AUDIT METADATA\n• Generated Timestamp: 2026-10-18T10:44:34.145Z\n• Initiating User ID: be8d34d1-0299-4ab8-8c0a-a163a06c78ed\n• Raw Transcript Included: NO (Typed live notes session)\n• Recording Integration Status: NOT_CONFIGURED (Honest conferencing status)\n• Compliance Notice: This draft document requires formal user confirmation before final closure."
       },
-      "mom_version": 1,
-      "mom_confirmed_by": null,
-      "mom_confirmed_at": null,
+      "mom_version": 2,
+      "mom_confirmed_by": "be8d34d1-0299-4ab8-8c0a-a163a06c78ed",
+      "mom_confirmed_at": "2026-10-19T06:54:43.145Z",
       "raw_transcript": null,
       "reminder_preferences": {
         "upcoming_24h": true,
@@ -91,9 +91,9 @@
         "closure_reminder": true
       },
       "created_at": "2026-10-18T10:35:11.405Z",
-      "updated_at": "2026-10-18T11:42:09.289Z",
+      "updated_at": "2026-10-19T06:54:43.362Z",
       "participants": [],
-      "closure_summary": "Meeting MEET-2026-4294 concluded successfully. Key decisions and action items agreed upon.",
+      "closure_summary": "Meeting MEET-2026-4294 was held on 2026-10-18 bringing together key stakeholders from Internal Team and technical BD. During this live session, 3 discussion notes were recorded, 0 formal decisions were agreed upon, and 0 concrete action item(s) were assigned to accountable functional owners with confirmed deadlines. No critical bottlenecks unmitigated.",
       "closure_data": {
         "is_draft": false,
         "summary": "Meeting MEET-2026-4294 concluded successfully. Key decisions and action items agreed upon.",
@@ -105,10 +105,12 @@
         "closed_by_user": "be8d34d1-0299-4ab8-8c0a-a163a06c78ed",
         "closed_at": "2026-10-18T11:42:08.816Z"
       },
-      "minutes_text": "================================================================\nMINUTES OF MEETING: TEST\nCODE: MEET-2026-4294 | DATE: 2026-10-18 04:20:00\nORGANIZER: N/A\nTYPE: Customer Meeting\n================================================================\n\n1. OBJECTIVE & AGENDA\nStandard meeting discussion.\n\n2. FORMAL DECISIONS RECORDED (0)\nNo formal decisions recorded.\n\n3. ACTION ITEMS & COMMITMENTS\n  1. [PT-7434] Prepare Formulation Batch Report for QA review (Owner: Unassigned | Dept: General | Due: 2026-10-21)\n\n4. MEETING CLOSURE SUMMARY\nMeeting MEET-2026-4294 concluded successfully. Key decisions and action items agreed upon.\n\nNEXT SCHEDULED MEETING: 2026-10-20",
+      "minutes_text": "================================================================================\nMINUTES OF MEETING (MOM): TEST\nREFERENCE CODE: MEET-2026-4294 | STATUS: DRAFT | VERSION: 1\n================================================================================\n\n1. MEETING IDENTIFICATION & REFERENCE\n• Title: Test\n• Unique Reference: MEET-2026-4294\n• Meeting Type: Customer Meeting\n• Conferencing Link: https://meet.google.com/sme-xcnb-ndq\n• Platform: GOOGLE_MEET\n\n2. SCHEDULE & TIMING\n• Scheduled Date: 2026-10-18\n• Scheduled Time: 04:20:00 - 05:25:00 (Asia/Kolkata)\n• Actual Session Start: 2026-10-18T10:35:17.218Z\n• Actual Session End: 2026-10-18T10:44:33.187Z\n\n3. ATTENDANCE & PARTICIPANTS\n• Presiding / Organizer: Platform Organizer\n• Client / Partner Organization: Internal Team\n• Related Opportunity / Scope: Standard Business Development\n• Attendees Recorded: Registered attendees and project team\n\n4. MEETING OBJECTIVE\nReview project milestones, evaluate technical formulation batch feasibility, and establish delivery commitments.\n\n5. ADOPTED AGENDA\n1. Review of previous actions\n2. Technical & commercial progress\n3. Decisions, task ownership & milestone confirmation\n\n6. EXECUTIVE SUMMARY\nMeeting MEET-2026-4294 was held on 2026-10-18 bringing together key stakeholders from Internal Team and technical BD. During this live session, 3 discussion notes were recorded, 0 formal decisions were agreed upon, and 0 concrete action item(s) were assigned to accountable functional owners with confirmed deadlines. No critical bottlenecks unmitigated.\n\n7. DISCUSSION SUMMARY BY AGENDA ITEM\n  [Note 1] (NOTE): • [ACTION]\n  [Note 2] (NOTE): Meeting Notes\n  [Note 3] (NOTE): Meeting Notes\n\n\n8. TECHNICAL AND COMMERCIAL FINDINGS\n• Technical Assessment: Technical scope and execution parameters validated by team.\n• Commercial Scope: Commercial terms aligned with enterprise schedule.\n\n9. CONFIRMED DECISIONS (0)\nNo formal decisions recorded.\n\n\n10. ACTION ITEMS & CANONICAL TASKS (0)\nNo action items created.\n\n\n11. RESPONSIBLE DEPARTMENTS & ASSIGNMENT BREAKDOWN\n• Cross-functional leadership\n\n\n\n12. AGREED DUE DATES & TIMELINES\n• All actions to be initiated within 48 hours of MOM receipt.\n\n\n\n13. RISKS, DEPENDENCIES & BOTTLENECK MITIGATION\nNo high-risk dependencies identified during this meeting.\n\n\n14. UNRESOLVED QUESTIONS & PARKED DISCUSSIONS\nAll key points raised were resolved or converted into action items.\n\n\n15. CARRIED-FORWARD ITEMS FROM PREVIOUS SESSIONS\nNo previous carried-forward items.\n\n\n16. NEXT STEPS & IMMEDIATE ACTIONS\n1. Circulate draft Minutes of Meeting for review and confirmation.\n2. Execute created BDIQ canonical tasks according to agreed milestone deadlines.\n3. Conduct follow-up progress review prior to next scheduled session.\n\n17. NEXT MEETING SCHEDULE\nTarget Follow-up: To be scheduled based on milestone completion\n\n18. SOURCE, GENERATION & AUDIT METADATA\n• Generated Timestamp: 2026-10-18T10:44:34.145Z\n• Initiating User ID: be8d34d1-0299-4ab8-8c0a-a163a06c78ed\n• Raw Transcript Included: NO (Typed live notes session)\n• Recording Integration Status: NOT_CONFIGURED (Honest conferencing status)\n• Compliance Notice: This draft document requires formal user confirmation before final closure.",
       "minutes_approved": true,
-      "minutes_approved_at": "2026-10-18T11:42:09.289Z",
-      "closed_at": "2026-10-18T11:42:09.289Z"
+      "minutes_approved_at": "2026-10-19T06:54:43.145Z",
+      "closed_at": "2026-10-19T06:54:43.145Z",
+      "minutes_approved_by": "be8d34d1-0299-4ab8-8c0a-a163a06c78ed",
+      "closed_by": "be8d34d1-0299-4ab8-8c0a-a163a06c78ed"
     }
   ],
   "notes": [
@@ -439,7 +441,7 @@
       "started_by": "be8d34d1-0299-4ab8-8c0a-a163a06c78ed",
       "recording_status": "NOT_CONFIGURED",
       "transcription_status": "NOT_CONFIGURED",
-      "mom_status": "DRAFT",
+      "mom_status": "CONFIRMED",
       "mom_draft": {
         "section_01_meeting_title_and_reference": {
           "meeting_reference": "MEET-2026-4294",
@@ -484,9 +486,9 @@
         },
         "mom_text": "================================================================================\nMINUTES OF MEETING (MOM): TEST\nREFERENCE CODE: MEET-2026-4294 | STATUS: DRAFT | VERSION: 1\n================================================================================\n\n1. MEETING IDENTIFICATION & REFERENCE\n• Title: Test\n• Unique Reference: MEET-2026-4294\n• Meeting Type: Customer Meeting\n• Conferencing Link: https://meet.google.com/sme-xcnb-ndq\n• Platform: GOOGLE_MEET\n\n2. SCHEDULE & TIMING\n• Scheduled Date: 2026-10-18\n• Scheduled Time: 04:20:00 - 05:25:00 (Asia/Kolkata)\n• Actual Session Start: 2026-10-18T10:35:17.218Z\n• Actual Session End: 2026-10-18T10:44:33.187Z\n\n3. ATTENDANCE & PARTICIPANTS\n• Presiding / Organizer: Platform Organizer\n• Client / Partner Organization: Internal Team\n• Related Opportunity / Scope: Standard Business Development\n• Attendees Recorded: Registered attendees and project team\n\n4. MEETING OBJECTIVE\nReview project milestones, evaluate technical formulation batch feasibility, and establish delivery commitments.\n\n5. ADOPTED AGENDA\n1. Review of previous actions\n2. Technical & commercial progress\n3. Decisions, task ownership & milestone confirmation\n\n6. EXECUTIVE SUMMARY\nMeeting MEET-2026-4294 was held on 2026-10-18 bringing together key stakeholders from Internal Team and technical BD. During this live session, 3 discussion notes were recorded, 0 formal decisions were agreed upon, and 0 concrete action item(s) were assigned to accountable functional owners with confirmed deadlines. No critical bottlenecks unmitigated.\n\n7. DISCUSSION SUMMARY BY AGENDA ITEM\n  [Note 1] (NOTE): • [ACTION]\n  [Note 2] (NOTE): Meeting Notes\n  [Note 3] (NOTE): Meeting Notes\n\n\n8. TECHNICAL AND COMMERCIAL FINDINGS\n• Technical Assessment: Technical scope and execution parameters validated by team.\n• Commercial Scope: Commercial terms aligned with enterprise schedule.\n\n9. CONFIRMED DECISIONS (0)\nNo formal decisions recorded.\n\n\n10. ACTION ITEMS & CANONICAL TASKS (0)\nNo action items created.\n\n\n11. RESPONSIBLE DEPARTMENTS & ASSIGNMENT BREAKDOWN\n• Cross-functional leadership\n\n\n\n12. AGREED DUE DATES & TIMELINES\n• All actions to be initiated within 48 hours of MOM receipt.\n\n\n\n13. RISKS, DEPENDENCIES & BOTTLENECK MITIGATION\nNo high-risk dependencies identified during this meeting.\n\n\n14. UNRESOLVED QUESTIONS & PARKED DISCUSSIONS\nAll key points raised were resolved or converted into action items.\n\n\n15. CARRIED-FORWARD ITEMS FROM PREVIOUS SESSIONS\nNo previous carried-forward items.\n\n\n16. NEXT STEPS & IMMEDIATE ACTIONS\n1. Circulate draft Minutes of Meeting for review and confirmation.\n2. Execute created BDIQ canonical tasks according to agreed milestone deadlines.\n3. Conduct follow-up progress review prior to next scheduled session.\n\n17. NEXT MEETING SCHEDULE\nTarget Follow-up: To be scheduled based on milestone completion\n\n18. SOURCE, GENERATION & AUDIT METADATA\n• Generated Timestamp: 2026-10-18T10:44:34.145Z\n• Initiating User ID: be8d34d1-0299-4ab8-8c0a-a163a06c78ed\n• Raw Transcript Included: NO (Typed live notes session)\n• Recording Integration Status: NOT_CONFIGURED (Honest conferencing status)\n• Compliance Notice: This draft document requires formal user confirmation before final closure."
       },
-      "mom_version": 1,
-      "mom_confirmed_by": null,
-      "mom_confirmed_at": null,
+      "mom_version": 2,
+      "mom_confirmed_by": "be8d34d1-0299-4ab8-8c0a-a163a06c78ed",
+      "mom_confirmed_at": "2026-10-19T06:54:43.145Z",
       "raw_transcript": null,
       "reminder_preferences": {
         "upcoming_24h": true,
@@ -495,8 +497,8 @@
         "preparation_reminder": true,
         "closure_reminder": true
       },
-      "status": "AWAITING_MOM_REVIEW",
-      "closure_summary": "Meeting MEET-2026-4294 concluded successfully. Key decisions and action items agreed upon.",
+      "status": "COMPLETED",
+      "closure_summary": "Meeting MEET-2026-4294 was held on 2026-10-18 bringing together key stakeholders from Internal Team and technical BD. During this live session, 3 discussion notes were recorded, 0 formal decisions were agreed upon, and 0 concrete action item(s) were assigned to accountable functional owners with confirmed deadlines. No critical bottlenecks unmitigated.",
       "closure_data": {
         "is_draft": false,
         "summary": "Meeting MEET-2026-4294 concluded successfully. Key decisions and action items agreed upon.",
@@ -507,7 +509,13 @@
         "next_agenda": null,
         "closed_by_user": "be8d34d1-0299-4ab8-8c0a-a163a06c78ed",
         "closed_at": "2026-10-18T11:42:08.816Z"
-      }
+      },
+      "minutes_text": "================================================================================\nMINUTES OF MEETING (MOM): TEST\nREFERENCE CODE: MEET-2026-4294 | STATUS: DRAFT | VERSION: 1\n================================================================================\n\n1. MEETING IDENTIFICATION & REFERENCE\n• Title: Test\n• Unique Reference: MEET-2026-4294\n• Meeting Type: Customer Meeting\n• Conferencing Link: https://meet.google.com/sme-xcnb-ndq\n• Platform: GOOGLE_MEET\n\n2. SCHEDULE & TIMING\n• Scheduled Date: 2026-10-18\n• Scheduled Time: 04:20:00 - 05:25:00 (Asia/Kolkata)\n• Actual Session Start: 2026-10-18T10:35:17.218Z\n• Actual Session End: 2026-10-18T10:44:33.187Z\n\n3. ATTENDANCE & PARTICIPANTS\n• Presiding / Organizer: Platform Organizer\n• Client / Partner Organization: Internal Team\n• Related Opportunity / Scope: Standard Business Development\n• Attendees Recorded: Registered attendees and project team\n\n4. MEETING OBJECTIVE\nReview project milestones, evaluate technical formulation batch feasibility, and establish delivery commitments.\n\n5. ADOPTED AGENDA\n1. Review of previous actions\n2. Technical & commercial progress\n3. Decisions, task ownership & milestone confirmation\n\n6. EXECUTIVE SUMMARY\nMeeting MEET-2026-4294 was held on 2026-10-18 bringing together key stakeholders from Internal Team and technical BD. During this live session, 3 discussion notes were recorded, 0 formal decisions were agreed upon, and 0 concrete action item(s) were assigned to accountable functional owners with confirmed deadlines. No critical bottlenecks unmitigated.\n\n7. DISCUSSION SUMMARY BY AGENDA ITEM\n  [Note 1] (NOTE): • [ACTION]\n  [Note 2] (NOTE): Meeting Notes\n  [Note 3] (NOTE): Meeting Notes\n\n\n8. TECHNICAL AND COMMERCIAL FINDINGS\n• Technical Assessment: Technical scope and execution parameters validated by team.\n• Commercial Scope: Commercial terms aligned with enterprise schedule.\n\n9. CONFIRMED DECISIONS (0)\nNo formal decisions recorded.\n\n\n10. ACTION ITEMS & CANONICAL TASKS (0)\nNo action items created.\n\n\n11. RESPONSIBLE DEPARTMENTS & ASSIGNMENT BREAKDOWN\n• Cross-functional leadership\n\n\n\n12. AGREED DUE DATES & TIMELINES\n• All actions to be initiated within 48 hours of MOM receipt.\n\n\n\n13. RISKS, DEPENDENCIES & BOTTLENECK MITIGATION\nNo high-risk dependencies identified during this meeting.\n\n\n14. UNRESOLVED QUESTIONS & PARKED DISCUSSIONS\nAll key points raised were resolved or converted into action items.\n\n\n15. CARRIED-FORWARD ITEMS FROM PREVIOUS SESSIONS\nNo previous carried-forward items.\n\n\n16. NEXT STEPS & IMMEDIATE ACTIONS\n1. Circulate draft Minutes of Meeting for review and confirmation.\n2. Execute created BDIQ canonical tasks according to agreed milestone deadlines.\n3. Conduct follow-up progress review prior to next scheduled session.\n\n17. NEXT MEETING SCHEDULE\nTarget Follow-up: To be scheduled based on milestone completion\n\n18. SOURCE, GENERATION & AUDIT METADATA\n• Generated Timestamp: 2026-10-18T10:44:34.145Z\n• Initiating User ID: be8d34d1-0299-4ab8-8c0a-a163a06c78ed\n• Raw Transcript Included: NO (Typed live notes session)\n• Recording Integration Status: NOT_CONFIGURED (Honest conferencing status)\n• Compliance Notice: This draft document requires formal user confirmation before final closure.",
+      "minutes_approved": true,
+      "minutes_approved_at": "2026-10-19T06:54:43.145Z",
+      "minutes_approved_by": "be8d34d1-0299-4ab8-8c0a-a163a06c78ed",
+      "closed_at": "2026-10-19T06:54:43.145Z",
+      "closed_by": "be8d34d1-0299-4ab8-8c0a-a163a06c78ed"
     }
   }
 }

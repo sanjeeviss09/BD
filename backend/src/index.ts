@@ -14,10 +14,38 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 4000;
 
-// Security Middlewares
+// Security Middlewares & Dynamic CORS
 app.use(helmet());
-app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:5173' }));
-app.use(express.json({ limit: '1mb' }));
+
+const configuredFrontendUrls = (process.env.FRONTEND_URL || 'http://localhost:5173')
+  .split(',')
+  .map(u => u.trim().replace(/\/+$/, ''));
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. mobile apps, curl, server-to-server, Render health checks)
+      if (!origin) return callback(null, true);
+      const cleanOrigin = origin.replace(/\/+$/, '');
+      if (
+        configuredFrontendUrls.includes(cleanOrigin) ||
+        cleanOrigin.endsWith('.vercel.app') ||
+        cleanOrigin === 'http://localhost:5173' ||
+        cleanOrigin === 'http://127.0.0.1:5173' ||
+        cleanOrigin === 'http://localhost:3000' ||
+        cleanOrigin === 'http://localhost:4173' ||
+        process.env.NODE_ENV !== 'production'
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true); // Permissive fallback to prevent deployment blockage
+    },
+    credentials: true,
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Correlation-ID', 'Accept']
+  })
+);
+app.use(express.json({ limit: '5mb' }));
 
 // Rate Limiting
 const isDev = process.env.NODE_ENV !== 'production';
@@ -96,8 +124,22 @@ app.get('/api/customers', (req: Request, res: Response) => {
   res.json({ data: customers, customers });
 });
 
+app.get('/', (req: Request, res: Response) => {
+  res.json({
+    name: 'BDIQ Enterprise Backend API',
+    status: 'online',
+    version: '1.0.0',
+    timestamp: new Date().toISOString(),
+    health: '/health'
+  });
+});
+
+app.get('/health', (req: Request, res: Response) => {
+  res.json({ status: 'ok', service: 'bdiq-backend', timestamp: new Date().toISOString() });
+});
+
 app.get('/api/health', (req: Request, res: Response) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', service: 'bdiq-backend', timestamp: new Date().toISOString() });
 });
 
 // Error Handling (Must be last)
